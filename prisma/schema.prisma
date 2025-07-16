@@ -8,23 +8,91 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
   fullName      String
-  image         String?   @default("")
-  email         String    @unique
+  image         String?     @default("")
+  email         String      @unique
   password      String
   location      String?
   phoneNumber   String?
   about         String?
-  fcmToken      String?   @default("")
-  isDeleted     Boolean   @default(false)
+  fcmToken      String?     @default("")
+  isDeleted     Boolean     @default(false)
   expirationOtp DateTime?
   otp           Int?
   role          UserRole
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  TenantUnit    TenantUnit?
+  Building      Building[]
 
   @@map("Users")
+}
+
+model Building {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  location  String
+  TotalUnit Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String   @db.ObjectId()
+  user      User     @relation(fields: [userId], references: [id])
+  Unit      Unit[]
+
+  @@map("Building")
+}
+
+model Unit {
+  id          String        @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  floor       String?       @default("")
+  code        Int           @unique
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  buildingId  String        @db.ObjectId()
+  building    Building      @relation(fields: [buildingId], references: [id])
+  TenantUnit  TenantUnit?
+  UnitPayment UnitPayment[]
+
+  @@map("Unit")
+}
+
+model UnitPayment {
+  id        String        @id @default(auto()) @map("_id") @db.ObjectId
+  date      DateTime
+  status    PaymentStatus @default(UNPAID)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  unitId    String        @db.ObjectId()
+  unit      Unit?         @relation(fields: [unitId], references: [id])
+
+  @@map("Unit-Payment")
+}
+
+model TenantUnit {
+  id                 String @id @default(auto()) @map("_id") @db.ObjectId
+  renterName         String
+  mobileNumber       String
+  sourceOfIncome     String
+  permanentAddress   String
+  emergencyContact   String
+  reference          String
+  govtIssuedId       String
+  socialSecurityCard String
+  pdfCopyOfLease     String
+  rentalApplication  String
+  petPolicyForm      String
+  backgroundCheck    String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenantId  String   @unique @db.ObjectId()
+  unitId    String   @unique @db.ObjectId()
+  tenant    User?    @relation(fields: [tenantId], references: [id])
+  unit      Unit?    @relation(fields: [unitId], references: [id])
+
+  @@map("Tenant-Unit")
 }
 
 enum UserRole {
@@ -32,4 +100,14 @@ enum UserRole {
   LANDLORD
   TENANT
   SERVICE_PROVIDER
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+}
+
+enum serviceStatus {
+  ONGOING
+  SOLVED
 }
