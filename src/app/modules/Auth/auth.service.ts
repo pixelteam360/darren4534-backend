@@ -13,7 +13,13 @@ const loginUser = async (payload: { email: string; password: string }) => {
     where: {
       email: payload.email,
     },
-    select: { email: true, password: true, id: true, role: true },
+    select: {
+      email: true,
+      password: true,
+      id: true,
+      role: true,
+      varifiedEmail: true,
+    },
   });
 
   if (!userData?.email) {
@@ -30,6 +36,61 @@ const loginUser = async (payload: { email: string; password: string }) => {
   if (!isCorrectPassword) {
     throw new ApiError(httpStatus.BAD_REQUEST, "Password incorrect!");
   }
+
+  if (!userData.varifiedEmail) {
+    // Generate a new OTP
+    const otp = Number(crypto.randomInt(1000, 9999));
+
+    // Set OTP expiration time to 10 minutes from now
+    const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
+
+    // Create the email content
+    const html = `
+<div style="font-family: Arial, sans-serif; color: #333; padding: 30px; background: linear-gradient(135deg, #6c63ff, #3f51b5); border-radius: 8px;">
+    <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 8px;">
+        <h2 style="color: #ffffff; font-size: 28px; text-align: center; margin-bottom: 20px;">
+            <span style="color: #ffeb3b;">Email varification OTP</span>
+        </h2>
+        <p style="font-size: 16px; color: #333; line-height: 1.5; text-align: center;">
+            Your email varification OTP code is below.
+        </p>
+        <p style="font-size: 32px; font-weight: bold; color: #ff4081; text-align: center; margin: 20px 0;">
+            ${otp}
+        </p>
+        <div style="text-align: center; margin-bottom: 20px;">
+            <p style="font-size: 14px; color: #555; margin-bottom: 10px;">
+                This OTP will expire in <strong>10 minutes</strong>. If you did not request this, please ignore this email.
+            </p>
+            <p style="font-size: 14px; color: #555; margin-bottom: 10px;">
+                If you need assistance, feel free to contact us.
+            </p>
+        </div>
+        <div style="text-align: center; margin-top: 30px;">
+            <p style="font-size: 12px; color: #999; text-align: center;">
+                Best Regards,<br/>
+                <span style="font-weight: bold; color: #3f51b5;">Nmbull Team</span><br/>
+                <a href="mailto:support@nmbull.com" style="color: #ffffff; text-decoration: none; font-weight: bold;">Contact Support</a>
+            </p>
+        </div>
+    </div>
+</div> `;
+
+    await emailSender(userData.email, html, "Email varification OTP");
+
+    await prisma.user.update({
+      where: { id: userData.id },
+      data: {
+        otp: otp,
+        expirationOtp: otpExpires,
+      },
+    });
+
+    return {
+      message: "Email varification code sended successfully",
+      varifiedEmail: userData.varifiedEmail,
+    };
+  }
+
   const accessToken = jwtHelpers.generateToken(
     {
       id: userData.id,
@@ -40,7 +101,11 @@ const loginUser = async (payload: { email: string; password: string }) => {
     config.jwt.expires_in as string
   );
 
-  return { role: userData.role, token: accessToken };
+  return {
+    role: userData.role,
+    varifiedEmail: userData.varifiedEmail,
+    token: accessToken,
+  };
 };
 
 const changePassword = async (
@@ -81,8 +146,6 @@ const changePassword = async (
 };
 
 const forgotPassword = async (payload: { email: string }) => {
-  // Fetch user data or throw if not found
-  console.log(payload);
   const userData = await prisma.user.findFirstOrThrow({
     where: {
       email: payload.email,
@@ -235,7 +298,17 @@ const verifyForgotPasswordOtp = async (payload: {
     },
   });
 
-  return { message: "OTP verification successful" };
+  const accessToken = jwtHelpers.generateToken(
+    {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    },
+    config.jwt.jwt_secret as Secret,
+    config.jwt.expires_in as string
+  );
+
+  return { role: user.role, token: accessToken };
 };
 
 const resetPassword = async (payload: { password: string; email: string }) => {

@@ -13,10 +13,11 @@ model User {
   image         String?     @default("")
   email         String      @unique
   password      String
-  location      String?
-  phoneNumber   String?
-  about         String?
+  location      String?     @default("")
+  phoneNumber   String?     @default("")
+  about         String?     @default("")
   fcmToken      String?     @default("")
+  varifiedEmail Boolean     @default(false)
   isDeleted     Boolean     @default(false)
   expirationOtp DateTime?
   otp           Int?
@@ -93,6 +94,22 @@ model TenantUnit {
   unit      Unit?    @relation(fields: [unitId], references: [id])
 
   @@map("Tenant-Unit")
+}
+
+model Service {
+  id               String  @id @default(auto()) @map("_id") @db.ObjectId
+  renterName       String
+  mobileNumber     String
+  sourceOfIncome   String
+  permanentAddress String
+  emergencyContact String
+  reference        String
+  agreedToTerms    Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("Service")
 }
 
 enum UserRole {

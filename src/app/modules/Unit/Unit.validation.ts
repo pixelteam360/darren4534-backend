@@ -1,15 +1,17 @@
 import { z } from "zod";
 
 const CreateUnitValidationSchema = z.object({
+  id: z.string(),
   name: z.string(),
-  location: z.string(),
-  TotalUnit: z.number().int(),
+  floor: z.string().optional(),
+  buildingId: z.string(),
 });
 
 const UnitUpdateSchema = z.object({
+  id: z.string().optional(),
   name: z.string().optional(),
-  location: z.string().optional(),
-  TotalUnit: z.number().int().optional(),
+  floor: z.string().optional().optional(),
+  buildingId: z.string().optional(),
 });
 
 export const UnitValidation = {

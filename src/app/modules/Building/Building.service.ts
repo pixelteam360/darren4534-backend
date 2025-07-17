@@ -1,6 +1,5 @@
 import prisma from "../../../shared/prisma";
 import { Building } from "@prisma/client";
-import { fileUploader } from "../../../helpars/fileUploader";
 import { TBuilding } from "./Building.interface";
 import crypto from "crypto";
 import ApiError from "../../../errors/ApiErrors";

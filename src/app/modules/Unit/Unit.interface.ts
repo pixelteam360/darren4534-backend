@@ -2,10 +2,11 @@
 export type TUnit = {
   id: string;
   name: string;
-  location: string;
-  TotalUnit: number;
+  floor?: string;
+  code: number;
   createdAt: Date;
   updatedAt: Date;
+  buildingId: string;
 };
 
 

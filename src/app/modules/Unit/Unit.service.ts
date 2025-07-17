@@ -1,41 +1,39 @@
 import prisma from "../../../shared/prisma";
 import { Unit } from "@prisma/client";
 import { TUnit } from "./Unit.interface";
-import crypto from "crypto";
 import ApiError from "../../../errors/ApiErrors";
 import httpStatus from "http-status";
+import crypto from "crypto";
 
 const createUnitIntoDb = async (payload: TUnit, userId: string) => {
+  const building = await prisma.building.findFirst({
+    where: { id: payload.buildingId, userId },
+    select: { id: true },
+  });
+
+  if (!building) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Building not found");
+  }
+
+  const code = Number(crypto.randomInt(100000, 999999));
+
   const result = await prisma.$transaction(async (prisma) => {
-    const Unit = await prisma.unit.create({
-      data: {
-        name: payload.name,
-        location: payload.location,
-        TotalUnit: payload.TotalUnit,
-        userId,
-      },
-      select: { id: true, name: true, TotalUnit: true },
+    const unit = await prisma.unit.create({ data: { ...payload, code } });
+
+    await prisma.building.update({
+      where: { id: building.id },
+      data: { TotalUnit: { increment: 1 } },
     });
 
-    const units = Array.from({ length: payload.TotalUnit }, (_, i) => ({
-      name: `Apartment 0${i + 1}`,
-      code: Number(crypto.randomInt(100000, 999999)),
-      UnitId: Unit.id,
-    }));
-
-    await prisma.unit.createMany({
-      data: units,
-    });
-
-    return Unit;
+    return unit;
   });
 
   return result;
 };
 
 const getUnitsFromDb = async (userId: string) => {
-  const result = await prisma.Unit.findMany({
-    where: { userId },
+  const result = await prisma.unit.findMany({
+    where: { id: userId },
   });
 
   return result;
@@ -43,7 +41,7 @@ const getUnitsFromDb = async (userId: string) => {
 
 const UnitUnits = async (id: string) => {
   const UnitProfile = await prisma.unit.findMany({
-    where: { UnitId: id },
+    where: { id },
 
     select: {
       name: true,
@@ -55,13 +53,9 @@ const UnitUnits = async (id: string) => {
   return UnitProfile;
 };
 
-const updateUnit = async (
-  payload: Unit,
-  UnitId: string,
-  userId: string
-) => {
-  const result = await prisma.Unit.update({
-    where: { id: UnitId, userId },
+const updateUnit = async (payload: Unit, UnitId: string, userId: string) => {
+  const result = await prisma.unit.update({
+    where: { id: UnitId },
     data: payload,
   });
 
@@ -69,7 +63,7 @@ const updateUnit = async (
     throw new ApiError(httpStatus.UNAUTHORIZED, "UNAUTHORIZED access");
   }
   return result;
-};
+};   
 
 export const UnitService = {
   createUnitIntoDb,

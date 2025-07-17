@@ -18,9 +18,9 @@ router
 
 router
   .route("/profile")
-  .get(auth(UserRole.ADMIN, UserRole.USER), userController.getMyProfile)
+  .get(auth(), userController.getMyProfile)
   .put(
-    auth(UserRole.ADMIN, UserRole.USER),
+    auth(),
     fileUploader.uploadSingle,
     (req: Request, res: Response, next: NextFunction) => {
       req.body = JSON.parse(req.body.data);
