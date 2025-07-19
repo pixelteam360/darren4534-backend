@@ -8,24 +8,28 @@ datasource db {
 }
 
 model User {
-  id            String      @id @default(auto()) @map("_id") @db.ObjectId
-  fullName      String
-  image         String?     @default("")
-  email         String      @unique
-  password      String
-  location      String?     @default("")
-  phoneNumber   String?     @default("")
-  about         String?     @default("")
-  fcmToken      String?     @default("")
-  varifiedEmail Boolean     @default(false)
-  isDeleted     Boolean     @default(false)
-  expirationOtp DateTime?
-  otp           Int?
-  role          UserRole
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  TenantUnit    TenantUnit?
-  Building      Building[]
+  id               String     @id @default(auto()) @map("_id") @db.ObjectId
+  fullName         String
+  image            String?    @default("")
+  email            String     @unique
+  password         String
+  location         String?    @default("")
+  phoneNumber      String?    @default("")
+  about            String?    @default("")
+  fcmToken         String?    @default("")
+  varifiedEmail    Boolean    @default(false)
+  isDeleted        Boolean    @default(false)
+  expirationOtp    DateTime?
+  otp              Int?
+  role             UserRole
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  UnitForm         UnitForm?
+  Building         Building[]
+  sentRooms        Room[]     @relation("RoomSender")
+  receivedRooms    Room[]     @relation("RoomReceiver")
+  sentMessages     Chat[]     @relation("ChatSender")
+  receivedMessages Chat[]     @relation("ChatReceiver")
 
   @@map("Users")
 }
@@ -45,33 +49,36 @@ model Building {
 }
 
 model Unit {
-  id          String        @id @default(auto()) @map("_id") @db.ObjectId
-  name        String
-  floor       String?       @default("")
-  code        Int           @unique
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  buildingId  String        @db.ObjectId()
-  building    Building      @relation(fields: [buildingId], references: [id])
-  TenantUnit  TenantUnit?
-  UnitPayment UnitPayment[]
+  id           String        @id @default(auto()) @map("_id") @db.ObjectId
+  name         String
+  floor        String?       @default("")
+  code         Int           @unique
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  buildingId   String        @db.ObjectId()
+  building     Building      @relation(fields: [buildingId], references: [id])
+  UnitForm     UnitForm?
+  UnitPayment  UnitPayment[]
+  AssignTenant AssignTenant?
 
   @@map("Unit")
 }
 
-model UnitPayment {
-  id        String        @id @default(auto()) @map("_id") @db.ObjectId
-  date      DateTime
-  status    PaymentStatus @default(UNPAID)
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
-  unitId    String        @db.ObjectId()
-  unit      Unit?         @relation(fields: [unitId], references: [id])
+model AssignTenant {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  name          String
+  contractMonth Int
+  startDate     DateTime
+  rentAmount    Float
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  unitId        String   @unique @db.ObjectId()
+  unit          Unit?    @relation(fields: [unitId], references: [id])
 
-  @@map("Unit-Payment")
+  @@map("landlord-Tenant")
 }
 
-model TenantUnit {
+model UnitForm {
   id                 String @id @default(auto()) @map("_id") @db.ObjectId
   renterName         String
   mobileNumber       String
@@ -93,7 +100,19 @@ model TenantUnit {
   tenant    User?    @relation(fields: [tenantId], references: [id])
   unit      Unit?    @relation(fields: [unitId], references: [id])
 
-  @@map("Tenant-Unit")
+  @@map("Unit-Form")
+}
+
+model UnitPayment {
+  id        String        @id @default(auto()) @map("_id") @db.ObjectId
+  date      DateTime
+  status    PaymentStatus @default(UNPAID)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  unitId    String        @db.ObjectId()
+  unit      Unit?         @relation(fields: [unitId], references: [id])
+
+  @@map("Unit-Payment")
 }
 
 model Service {
@@ -110,6 +129,36 @@ model Service {
   updatedAt DateTime @updatedAt
 
   @@map("Service")
+}
+
+model Room {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  senderId   String   @db.ObjectId
+  receiverId String   @db.ObjectId
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  sender     User     @relation("RoomSender", fields: [senderId], references: [id])
+  receiver   User     @relation("RoomReceiver", fields: [receiverId], references: [id])
+  chat       Chat[]
+
+  @@map("Rooms")
+}
+
+model Chat {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  message    String
+  images     String?  @default("")
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  senderId   String   @db.ObjectId
+  receiverId String   @db.ObjectId
+  roomId     String   @db.ObjectId
+  sender     User     @relation("ChatSender", fields: [senderId], references: [id])
+  receiver   User     @relation("ChatReceiver", fields: [receiverId], references: [id])
+  room       Room     @relation(fields: [roomId], references: [id])
+
+  @@map("Chats")
 }
 
 enum UserRole {

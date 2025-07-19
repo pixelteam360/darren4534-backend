@@ -29,7 +29,7 @@ const createBuildingIntoDb = (payload, userId) => __awaiter(void 0, void 0, void
             select: { id: true, name: true, TotalUnit: true },
         });
         const units = Array.from({ length: payload.TotalUnit }, (_, i) => ({
-            name: `Apartment 0${i + 1}`,
+            name: `Unit 0${i + 1}`,
             code: Number(crypto_1.default.randomInt(100000, 999999)),
             buildingId: building.id,
         }));
@@ -50,9 +50,16 @@ const buildingUnits = (id) => __awaiter(void 0, void 0, void 0, function* () {
     const BuildingProfile = yield prisma_1.default.unit.findMany({
         where: { buildingId: id },
         select: {
+            id: true,
             name: true,
             floor: true,
-            TenantUnit: { select: { tenant: { select: { fullName: true } } } },
+            AssignTenant: { select: { name: true } },
+            UnitPayment: {
+                take: 1,
+                orderBy: { updatedAt: "desc" },
+                where: { status: "PAID" },
+                select: { status: true, date: true }
+            },
         },
     });
     return BuildingProfile;

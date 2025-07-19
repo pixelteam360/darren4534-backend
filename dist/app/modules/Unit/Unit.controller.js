@@ -17,21 +17,14 @@ const catchAsync_1 = __importDefault(require("../../../shared/catchAsync"));
 const sendResponse_1 = __importDefault(require("../../../shared/sendResponse"));
 const Unit_service_1 = require("./Unit.service");
 const createUnit = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield Unit_service_1.UnitService.createUnitIntoDb(req.body, req.user.id);
+    const result = yield Unit_service_1.UnitService.createUnit(req.body, req.user.id);
     (0, sendResponse_1.default)(res, {
         message: "Unit Created successfully!",
         data: result,
     });
 }));
-const getUnits = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield Unit_service_1.UnitService.getUnitsFromDb(req.user.id);
-    (0, sendResponse_1.default)(res, {
-        message: "Units retrieve successfully!",
-        data: result,
-    });
-}));
-const UnitUnits = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield Unit_service_1.UnitService.UnitUnits(req.params.id);
+const singleUnits = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield Unit_service_1.UnitService.singleUnits(req.params.id);
     (0, sendResponse_1.default)(res, {
         message: "Unit Units retrieved successfully",
         data: result,
@@ -45,9 +38,32 @@ const updateUnit = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, voi
         data: result,
     });
 }));
+const assignTenant = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield Unit_service_1.UnitService.assignTenant(req.body, req.user.id);
+    (0, sendResponse_1.default)(res, {
+        message: "Tenant assigned successfully!",
+        data: result,
+    });
+}));
+const varifyUnitCode = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield Unit_service_1.UnitService.varifyUnitCode(req.body);
+    (0, sendResponse_1.default)(res, {
+        message: "Unit varified successfully!",
+        data: result,
+    });
+}));
+const unitForm = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield Unit_service_1.UnitService.unitForm(req.body, req.user.id);
+    (0, sendResponse_1.default)(res, {
+        message: "Unit form submited successfully!",
+        data: result,
+    });
+}));
 exports.UnitController = {
     createUnit,
-    getUnits,
-    UnitUnits,
+    singleUnits,
     updateUnit,
+    assignTenant,
+    varifyUnitCode,
+    unitForm
 };

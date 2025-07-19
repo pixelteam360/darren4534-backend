@@ -1,11 +1,11 @@
 import prisma from "../../../shared/prisma";
 import { Unit } from "@prisma/client";
-import { TUnit } from "./Unit.interface";
+import { TAssignTenant, TUnit, TUnitForm } from "./Unit.interface";
 import ApiError from "../../../errors/ApiErrors";
 import httpStatus from "http-status";
 import crypto from "crypto";
 
-const createUnitIntoDb = async (payload: TUnit, userId: string) => {
+const createUnit = async (payload: TUnit, userId: string) => {
   const building = await prisma.building.findFirst({
     where: { id: payload.buildingId, userId },
     select: { id: true },
@@ -31,22 +31,21 @@ const createUnitIntoDb = async (payload: TUnit, userId: string) => {
   return result;
 };
 
-const getUnitsFromDb = async (userId: string) => {
-  const result = await prisma.unit.findMany({
-    where: { id: userId },
-  });
-
-  return result;
-};
-
-const UnitUnits = async (id: string) => {
+const singleUnits = async (id: string) => {
   const UnitProfile = await prisma.unit.findMany({
     where: { id },
 
     select: {
       name: true,
       floor: true,
-      TenantUnit: { select: { tenant: { select: { fullName: true } } } },
+      code: true,
+      AssignTenant: { select: { name: true, rentAmount: true } },
+      UnitForm: {
+        include: {
+          tenant: { select: { fullName: true, image: true, location: true } },
+        },
+      },
+      UnitPayment: true,
     },
   });
 
@@ -63,11 +62,100 @@ const updateUnit = async (payload: Unit, UnitId: string, userId: string) => {
     throw new ApiError(httpStatus.UNAUTHORIZED, "UNAUTHORIZED access");
   }
   return result;
-};   
+};
+
+const assignTenant = async (payload: TAssignTenant, userId: string) => {
+  const unit = await prisma.unit.findFirst({
+    where: { id: payload.unitId },
+    select: { id: true, buildingId: true },
+  });
+
+  if (!unit) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Unit not found");
+  }
+
+  const building = await prisma.building.findFirst({
+    where: { id: unit.buildingId, userId },
+    select: { id: true },
+  });
+
+  if (!building) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Your Building not found");
+  }
+
+  const payment = Array.from({ length: payload.contractMonth }, (_, i) => {
+    const date = new Date(payload.startDate);
+
+    date.setMonth(date.getMonth() + i);
+
+    return {
+      date,
+      unitId: unit.id,
+    };
+  });
+
+  const result = await prisma.$transaction(async (prisma) => {
+    const assign = await prisma.assignTenant.create({ data: payload });
+
+    await prisma.unitPayment.createMany({
+      data: payment,
+    });
+
+    return assign;
+  });
+
+  return result;
+};
+
+const varifyUnitCode = async (payload: { code: number }) => {
+  console.log(payload.code);
+  const result = await prisma.unit.findFirst({
+    where: { code: payload.code },
+    select: { id: true, name: true },
+  });
+
+  return result;
+};
+
+const unitForm = async (payload: TUnitForm, userId: string) => {
+  const myUnit = await prisma.unitForm.findFirst({
+    where: {
+      tenantId: userId,
+    },
+  });
+
+  if (myUnit) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "You are already assigned a unit"
+    );
+  }
+
+  const unit = await prisma.unit.findFirst({
+    where: { id: payload.unitId },
+    select: { id: true, UnitForm: true },
+  });
+
+  if (!unit) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Unit not found");
+  }
+
+  if (unit?.UnitForm) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "This unit is already assigned");
+  }
+
+  const result = await prisma.unitForm.create({
+    data: { ...payload, tenantId: userId },
+  });
+
+  return result;
+};
 
 export const UnitService = {
-  createUnitIntoDb,
-  getUnitsFromDb,
-  UnitUnits,
+  createUnit,
+  singleUnits,
   updateUnit,
+  assignTenant,
+  varifyUnitCode,
+  unitForm,
 };

@@ -17,7 +17,7 @@ const prisma_1 = __importDefault(require("../../../shared/prisma"));
 const ApiErrors_1 = __importDefault(require("../../../errors/ApiErrors"));
 const http_status_1 = __importDefault(require("http-status"));
 const crypto_1 = __importDefault(require("crypto"));
-const createUnitIntoDb = (payload, userId) => __awaiter(void 0, void 0, void 0, function* () {
+const createUnit = (payload, userId) => __awaiter(void 0, void 0, void 0, function* () {
     const building = yield prisma_1.default.building.findFirst({
         where: { id: payload.buildingId, userId },
         select: { id: true },
@@ -36,19 +36,20 @@ const createUnitIntoDb = (payload, userId) => __awaiter(void 0, void 0, void 0, 
     }));
     return result;
 });
-const getUnitsFromDb = (userId) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield prisma_1.default.unit.findMany({
-        where: { id: userId },
-    });
-    return result;
-});
-const UnitUnits = (id) => __awaiter(void 0, void 0, void 0, function* () {
+const singleUnits = (id) => __awaiter(void 0, void 0, void 0, function* () {
     const UnitProfile = yield prisma_1.default.unit.findMany({
         where: { id },
         select: {
             name: true,
             floor: true,
-            TenantUnit: { select: { tenant: { select: { fullName: true } } } },
+            code: true,
+            AssignTenant: { select: { name: true, rentAmount: true } },
+            UnitForm: {
+                include: {
+                    tenant: { select: { fullName: true, image: true, location: true } },
+                },
+            },
+            UnitPayment: true,
         },
     });
     return UnitProfile;
@@ -63,9 +64,75 @@ const updateUnit = (payload, UnitId, userId) => __awaiter(void 0, void 0, void 0
     }
     return result;
 });
+const assignTenant = (payload, userId) => __awaiter(void 0, void 0, void 0, function* () {
+    const unit = yield prisma_1.default.unit.findFirst({
+        where: { id: payload.unitId },
+        select: { id: true, buildingId: true },
+    });
+    if (!unit) {
+        throw new ApiErrors_1.default(http_status_1.default.NOT_FOUND, "Unit not found");
+    }
+    const building = yield prisma_1.default.building.findFirst({
+        where: { id: unit.buildingId, userId },
+        select: { id: true },
+    });
+    if (!building) {
+        throw new ApiErrors_1.default(http_status_1.default.NOT_FOUND, "Your Building not found");
+    }
+    const payment = Array.from({ length: payload.contractMonth }, (_, i) => {
+        const date = new Date(payload.startDate);
+        date.setMonth(date.getMonth() + i);
+        return {
+            date,
+            unitId: unit.id,
+        };
+    });
+    const result = yield prisma_1.default.$transaction((prisma) => __awaiter(void 0, void 0, void 0, function* () {
+        const assign = yield prisma.assignTenant.create({ data: payload });
+        yield prisma.unitPayment.createMany({
+            data: payment,
+        });
+        return assign;
+    }));
+    return result;
+});
+const varifyUnitCode = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log(payload.code);
+    const result = yield prisma_1.default.unit.findFirst({
+        where: { code: payload.code },
+        select: { id: true, name: true },
+    });
+    return result;
+});
+const unitForm = (payload, userId) => __awaiter(void 0, void 0, void 0, function* () {
+    const myUnit = yield prisma_1.default.unitForm.findFirst({
+        where: {
+            tenantId: userId,
+        },
+    });
+    if (myUnit) {
+        throw new ApiErrors_1.default(http_status_1.default.BAD_REQUEST, "You are already assigned a unit");
+    }
+    const unit = yield prisma_1.default.unit.findFirst({
+        where: { id: payload.unitId },
+        select: { id: true, UnitForm: true },
+    });
+    if (!unit) {
+        throw new ApiErrors_1.default(http_status_1.default.BAD_REQUEST, "Unit not found");
+    }
+    if (unit === null || unit === void 0 ? void 0 : unit.UnitForm) {
+        throw new ApiErrors_1.default(http_status_1.default.BAD_REQUEST, "This unit is already assigned");
+    }
+    const result = yield prisma_1.default.unitForm.create({
+        data: Object.assign(Object.assign({}, payload), { tenantId: userId }),
+    });
+    return result;
+});
 exports.UnitService = {
-    createUnitIntoDb,
-    getUnitsFromDb,
-    UnitUnits,
+    createUnit,
+    singleUnits,
     updateUnit,
+    assignTenant,
+    varifyUnitCode,
+    unitForm,
 };

@@ -257,6 +257,13 @@ const verifyForgotPasswordOtp = (payload) => __awaiter(void 0, void 0, void 0, f
     // Check if the user exists
     const user = yield prisma_1.default.user.findUnique({
         where: { email: payload.email },
+        select: {
+            id: true,
+            otp: true,
+            expirationOtp: true,
+            email: true,
+            role: true,
+        },
     });
     if (!user) {
         throw new ApiErrors_1.default(http_status_1.default.NOT_FOUND, "This user is not found!");
@@ -271,8 +278,9 @@ const verifyForgotPasswordOtp = (payload) => __awaiter(void 0, void 0, void 0, f
     yield prisma_1.default.user.update({
         where: { id: user.id },
         data: {
-            otp: null, // Clear the OTP
-            expirationOtp: null, // Clear the OTP expiration
+            varifiedEmail: true,
+            otp: null,
+            expirationOtp: null,
         },
     });
     const accessToken = jwtHelpers_1.jwtHelpers.generateToken({

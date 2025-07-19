@@ -33,7 +33,7 @@ const emailSender = (to, html, subject) => __awaiter(void 0, void 0, void 0, fun
             html,
         };
         const info = yield transporter.sendMail(mailOptions);
-        console.log(`Email sent: ${info.messageId}`);
+        // console.log(`Email sent: ${info.messageId}`);
         return info.messageId;
     }
     catch (error) {

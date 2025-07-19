@@ -9,7 +9,6 @@ const router = express.Router();
 
 router
   .route("/")
-  .get(auth(UserRole.LANDLORD), UnitController.getUnits)
   .post(
     auth(UserRole.LANDLORD),
     validateRequest(UnitValidation.CreateUnitValidationSchema),
@@ -17,8 +16,28 @@ router
   );
 
 router
+  .route("/assign-tenant")
+  .post(
+    auth(UserRole.LANDLORD),
+    validateRequest(UnitValidation.AssignTenanSchema),
+    UnitController.assignTenant
+  );
+
+router.post(
+  "/varify",
+  auth(UserRole.TENANT),
+  UnitController.varifyUnitCode
+);
+
+router.post(
+  "/form",
+  auth(UserRole.TENANT),
+  UnitController.unitForm
+);
+
+router
   .route("/:id")
-  .get(auth(), UnitController.UnitUnits)
+  .get(auth(), UnitController.singleUnits)
   .put(auth(UserRole.LANDLORD), UnitController.updateUnit);
 
 export const UnitRoutes = router;

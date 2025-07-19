@@ -18,7 +18,7 @@ const createBuildingIntoDb = async (payload: TBuilding, userId: string) => {
     });
 
     const units = Array.from({ length: payload.TotalUnit }, (_, i) => ({
-      name: `Apartment 0${i + 1}`,
+      name: `Unit 0${i + 1}`,
       code: Number(crypto.randomInt(100000, 999999)),
       buildingId: building.id,
     }));
@@ -46,9 +46,16 @@ const buildingUnits = async (id: string) => {
     where: { buildingId: id },
 
     select: {
+      id: true,
       name: true,
       floor: true,
-      TenantUnit: { select: { tenant: { select: { fullName: true } } } },
+      AssignTenant: { select: { name: true } },
+      UnitPayment: {
+        take: 1,
+        orderBy: { updatedAt: "desc" },
+        where: { status: "PAID" },
+        select: { status: true, date: true}
+      },
     },
   });
 

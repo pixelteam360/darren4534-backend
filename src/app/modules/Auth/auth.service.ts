@@ -274,6 +274,13 @@ const verifyForgotPasswordOtp = async (payload: {
   // Check if the user exists
   const user = await prisma.user.findUnique({
     where: { email: payload.email },
+    select: {
+      id: true,
+      otp: true,
+      expirationOtp: true,
+      email: true,
+      role: true,
+    },
   });
 
   if (!user) {
@@ -293,8 +300,9 @@ const verifyForgotPasswordOtp = async (payload: {
   await prisma.user.update({
     where: { id: user.id },
     data: {
-      otp: null, // Clear the OTP
-      expirationOtp: null, // Clear the OTP expiration
+      varifiedEmail: true,
+      otp: null,
+      expirationOtp: null,
     },
   });
 
