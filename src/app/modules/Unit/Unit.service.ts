@@ -4,6 +4,7 @@ import { TAssignTenant, TUnit, TUnitForm } from "./Unit.interface";
 import ApiError from "../../../errors/ApiErrors";
 import httpStatus from "http-status";
 import crypto from "crypto";
+import { fileUploader } from "../../../helpars/fileUploader";
 
 const createUnit = async (payload: TUnit, userId: string) => {
   const building = await prisma.building.findFirst({
@@ -40,6 +41,7 @@ const singleUnits = async (id: string) => {
       floor: true,
       code: true,
       AssignTenant: { select: { name: true, rentAmount: true } },
+      UnitService: true,
       UnitForm: {
         include: {
           tenant: { select: { fullName: true, image: true, location: true } },
@@ -54,7 +56,7 @@ const singleUnits = async (id: string) => {
 
 const updateUnit = async (payload: Unit, UnitId: string, userId: string) => {
   const result = await prisma.unit.update({
-    where: { id: UnitId },
+    where: { id: UnitId, building: { userId } },
     data: payload,
   });
 
@@ -117,7 +119,16 @@ const varifyUnitCode = async (payload: { code: number }) => {
   return result;
 };
 
-const unitForm = async (payload: TUnitForm, userId: string) => {
+const unitForm = async (
+  payload: TUnitForm,
+  userId: string,
+  govtIssuedIdFile: any,
+  socialSecurityCardFile: any,
+  pdfCopyOfLeaseFile: any,
+  rentalApplicationFile: any,
+  petPolicyFormFile: any,
+  backgroundCheckFile: any
+) => {
   const myUnit = await prisma.unitForm.findFirst({
     where: {
       tenantId: userId,
@@ -144,8 +155,33 @@ const unitForm = async (payload: TUnitForm, userId: string) => {
     throw new ApiError(httpStatus.BAD_REQUEST, "This unit is already assigned");
   }
 
+  const [
+    govtIssuedId,
+    socialSecurityCard,
+    pdfCopyOfLease,
+    rentalApplication,
+    petPolicyForm,
+    backgroundCheck,
+  ] = await Promise.all([
+    fileUploader.uploadToCloudinary(govtIssuedIdFile),
+    fileUploader.uploadToCloudinary(socialSecurityCardFile),
+    fileUploader.uploadToCloudinary(pdfCopyOfLeaseFile),
+    fileUploader.uploadToCloudinary(rentalApplicationFile),
+    fileUploader.uploadToCloudinary(petPolicyFormFile),
+    fileUploader.uploadToCloudinary(backgroundCheckFile),
+  ]);
+
   const result = await prisma.unitForm.create({
-    data: { ...payload, tenantId: userId },
+    data: {
+      ...payload,
+      tenantId: userId,
+      govtIssuedId: govtIssuedId.Location,
+      socialSecurityCard: socialSecurityCard.Location,
+      pdfCopyOfLease: pdfCopyOfLease.Location,
+      rentalApplication: rentalApplication.Location,
+      petPolicyForm: petPolicyForm.Location,
+      backgroundCheck: backgroundCheck.Location,
+    },
   });
 
   return result;

@@ -3,6 +3,7 @@ import { AuthRoutes } from "../modules/Auth/auth.routes";
 import { UserRoutes } from "../modules/User/user.routes";
 import { BuildingRoutes } from "../modules/Building/Building.routes";
 import { UnitRoutes } from "../modules/Unit/Unit.routes";
+import { UnitServiceRoutes } from "../modules/UnitService/UnitService.routes";
 
 const router = express.Router();
 
@@ -22,6 +23,10 @@ const moduleRoutes = [
   {
     path: "/unit",
     route: UnitRoutes,
+  },
+  {
+    path: "/unit-service",
+    route: UnitServiceRoutes,
   },
 ];
 

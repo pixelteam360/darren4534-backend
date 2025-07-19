@@ -54,7 +54,13 @@ const buildingUnits = async (id: string) => {
         take: 1,
         orderBy: { updatedAt: "desc" },
         where: { status: "PAID" },
-        select: { status: true, date: true}
+        select: { status: true, date: true },
+      },
+      UnitService: {
+        take: 1,
+        orderBy: { updatedAt: "desc" },
+        where: { status: "PENDING" },
+        select: { id: true, status: true },
       },
     },
   });

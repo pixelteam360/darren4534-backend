@@ -1,3 +1,5 @@
+import httpStatus from "http-status";
+import ApiError from "../../../errors/ApiErrors";
 import catchAsync from "../../../shared/catchAsync";
 import sendResponse from "../../../shared/sendResponse";
 import { UnitService } from "./Unit.service";
@@ -44,7 +46,40 @@ const varifyUnitCode = catchAsync(async (req, res) => {
 });
 
 const unitForm = catchAsync(async (req, res) => {
-  const result = await UnitService.unitForm(req.body, req.user.id);
+  const {
+    govtIssuedId,
+    socialSecurityCard,
+    pdfCopyOfLease,
+    rentalApplication,
+    petPolicyForm,
+    backgroundCheck,
+  } = req.files as any;
+
+  const requiredFiles = {
+    govtIssuedId,
+    socialSecurityCard,
+    pdfCopyOfLease,
+    rentalApplication,
+    petPolicyForm,
+    backgroundCheck,
+  };
+
+  for (const [key, value] of Object.entries(requiredFiles)) {
+    if (!value || !Array.isArray(value) || value.length === 0) {
+      throw new ApiError(httpStatus.BAD_REQUEST, `${key} is missing`);
+    }
+  }
+
+  const result = await UnitService.unitForm(
+    req.body,
+    req.user.id,
+    govtIssuedId[0],
+    socialSecurityCard[0],
+    pdfCopyOfLease[0],
+    rentalApplication[0],
+    petPolicyForm[0],
+    backgroundCheck[0]
+  );
   sendResponse(res, {
     message: "Unit form submited successfully!",
     data: result,
@@ -57,5 +92,5 @@ export const UnitController = {
   updateUnit,
   assignTenant,
   varifyUnitCode,
-  unitForm
+  unitForm,
 };

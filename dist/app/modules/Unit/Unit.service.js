@@ -17,6 +17,7 @@ const prisma_1 = __importDefault(require("../../../shared/prisma"));
 const ApiErrors_1 = __importDefault(require("../../../errors/ApiErrors"));
 const http_status_1 = __importDefault(require("http-status"));
 const crypto_1 = __importDefault(require("crypto"));
+const fileUploader_1 = require("../../../helpars/fileUploader");
 const createUnit = (payload, userId) => __awaiter(void 0, void 0, void 0, function* () {
     const building = yield prisma_1.default.building.findFirst({
         where: { id: payload.buildingId, userId },
@@ -44,6 +45,7 @@ const singleUnits = (id) => __awaiter(void 0, void 0, void 0, function* () {
             floor: true,
             code: true,
             AssignTenant: { select: { name: true, rentAmount: true } },
+            UnitService: true,
             UnitForm: {
                 include: {
                     tenant: { select: { fullName: true, image: true, location: true } },
@@ -56,7 +58,7 @@ const singleUnits = (id) => __awaiter(void 0, void 0, void 0, function* () {
 });
 const updateUnit = (payload, UnitId, userId) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield prisma_1.default.unit.update({
-        where: { id: UnitId },
+        where: { id: UnitId, building: { userId } },
         data: payload,
     });
     if (!result) {
@@ -104,7 +106,7 @@ const varifyUnitCode = (payload) => __awaiter(void 0, void 0, void 0, function* 
     });
     return result;
 });
-const unitForm = (payload, userId) => __awaiter(void 0, void 0, void 0, function* () {
+const unitForm = (payload, userId, govtIssuedIdFile, socialSecurityCardFile, pdfCopyOfLeaseFile, rentalApplicationFile, petPolicyFormFile, backgroundCheckFile) => __awaiter(void 0, void 0, void 0, function* () {
     const myUnit = yield prisma_1.default.unitForm.findFirst({
         where: {
             tenantId: userId,
@@ -123,8 +125,16 @@ const unitForm = (payload, userId) => __awaiter(void 0, void 0, void 0, function
     if (unit === null || unit === void 0 ? void 0 : unit.UnitForm) {
         throw new ApiErrors_1.default(http_status_1.default.BAD_REQUEST, "This unit is already assigned");
     }
+    const [govtIssuedId, socialSecurityCard, pdfCopyOfLease, rentalApplication, petPolicyForm, backgroundCheck,] = yield Promise.all([
+        fileUploader_1.fileUploader.uploadToCloudinary(govtIssuedIdFile),
+        fileUploader_1.fileUploader.uploadToCloudinary(socialSecurityCardFile),
+        fileUploader_1.fileUploader.uploadToCloudinary(pdfCopyOfLeaseFile),
+        fileUploader_1.fileUploader.uploadToCloudinary(rentalApplicationFile),
+        fileUploader_1.fileUploader.uploadToCloudinary(petPolicyFormFile),
+        fileUploader_1.fileUploader.uploadToCloudinary(backgroundCheckFile),
+    ]);
     const result = yield prisma_1.default.unitForm.create({
-        data: Object.assign(Object.assign({}, payload), { tenantId: userId }),
+        data: Object.assign(Object.assign({}, payload), { tenantId: userId, govtIssuedId: govtIssuedId.Location, socialSecurityCard: socialSecurityCard.Location, pdfCopyOfLease: pdfCopyOfLease.Location, rentalApplication: rentalApplication.Location, petPolicyForm: petPolicyForm.Location, backgroundCheck: backgroundCheck.Location }),
     });
     return result;
 });

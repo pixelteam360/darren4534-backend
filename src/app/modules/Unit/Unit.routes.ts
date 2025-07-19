@@ -4,6 +4,7 @@ import { UnitValidation } from "./Unit.validation";
 import auth from "../../middlewares/auth";
 import { UnitController } from "./Unit.controller";
 import { UserRole } from "@prisma/client";
+import { fileUploader } from "../../../helpars/fileUploader";
 
 const router = express.Router();
 
@@ -23,15 +24,17 @@ router
     UnitController.assignTenant
   );
 
-router.post(
-  "/varify",
-  auth(UserRole.TENANT),
-  UnitController.varifyUnitCode
-);
+router.post("/varify", auth(UserRole.TENANT), UnitController.varifyUnitCode);
 
 router.post(
   "/form",
   auth(UserRole.TENANT),
+  fileUploader.unitForm,
+  (req: Request, res: Response, next: NextFunction) => {
+    req.body = JSON.parse(req.body.data);
+    next();
+  },
+  validateRequest(UnitValidation.unitFormSchema),
   UnitController.unitForm
 );
 

@@ -26,16 +26,11 @@ const unitFormSchema = zod_1.z.object({
     permanentAddress: zod_1.z.string().min(1),
     emergencyContact: zod_1.z.string().min(10),
     reference: zod_1.z.string().min(1),
-    govtIssuedId: zod_1.z.string().min(1),
-    socialSecurityCard: zod_1.z.string().min(1),
-    pdfCopyOfLease: zod_1.z.string().url("Must be a valid URL"),
-    rentalApplication: zod_1.z.string().url("Must be a valid URL"),
-    petPolicyForm: zod_1.z.string().url("Must be a valid URL"),
-    backgroundCheck: zod_1.z.string().url("Must be a valid URL"),
     unitId: zod_1.z.string(),
 });
 exports.UnitValidation = {
     CreateUnitValidationSchema,
     UnitUpdateSchema,
     AssignTenanSchema,
+    unitFormSchema,
 };

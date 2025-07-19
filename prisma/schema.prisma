@@ -8,28 +8,29 @@ datasource db {
 }
 
 model User {
-  id               String     @id @default(auto()) @map("_id") @db.ObjectId
+  id               String        @id @default(auto()) @map("_id") @db.ObjectId
   fullName         String
-  image            String?    @default("")
-  email            String     @unique
+  image            String?       @default("")
+  email            String        @unique
   password         String
-  location         String?    @default("")
-  phoneNumber      String?    @default("")
-  about            String?    @default("")
-  fcmToken         String?    @default("")
-  varifiedEmail    Boolean    @default(false)
-  isDeleted        Boolean    @default(false)
+  location         String?       @default("")
+  phoneNumber      String?       @default("")
+  about            String?       @default("")
+  fcmToken         String?       @default("")
+  varifiedEmail    Boolean       @default(false)
+  isDeleted        Boolean       @default(false)
   expirationOtp    DateTime?
   otp              Int?
   role             UserRole
-  createdAt        DateTime   @default(now())
-  updatedAt        DateTime   @updatedAt
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
   UnitForm         UnitForm?
   Building         Building[]
-  sentRooms        Room[]     @relation("RoomSender")
-  receivedRooms    Room[]     @relation("RoomReceiver")
-  sentMessages     Chat[]     @relation("ChatSender")
-  receivedMessages Chat[]     @relation("ChatReceiver")
+  sentRooms        Room[]        @relation("RoomSender")
+  receivedRooms    Room[]        @relation("RoomReceiver")
+  sentMessages     Chat[]        @relation("ChatSender")
+  receivedMessages Chat[]        @relation("ChatReceiver")
+  UnitService      UnitService[]
 
   @@map("Users")
 }
@@ -60,6 +61,7 @@ model Unit {
   UnitForm     UnitForm?
   UnitPayment  UnitPayment[]
   AssignTenant AssignTenant?
+  UnitService  UnitService[]
 
   @@map("Unit")
 }
@@ -101,6 +103,22 @@ model UnitForm {
   unit      Unit?    @relation(fields: [unitId], references: [id])
 
   @@map("Unit-Form")
+}
+
+model UnitService {
+  id        String        @id @default(auto()) @map("_id") @db.ObjectId
+  title     String
+  reason    String
+  image     String
+  status    serviceStatus @default(PENDING)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  unitId    String        @db.ObjectId()
+  unit      Unit?         @relation(fields: [unitId], references: [id])
+  tenantId  String        @db.ObjectId()
+  tenant    User          @relation(fields: [tenantId], references: [id])
+
+  @@map("Unit-Service")
 }
 
 model UnitPayment {
@@ -174,6 +192,7 @@ enum PaymentStatus {
 }
 
 enum serviceStatus {
+  PENDING
   ONGOING
   SOLVED
 }

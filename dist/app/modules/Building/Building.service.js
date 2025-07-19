@@ -58,7 +58,13 @@ const buildingUnits = (id) => __awaiter(void 0, void 0, void 0, function* () {
                 take: 1,
                 orderBy: { updatedAt: "desc" },
                 where: { status: "PAID" },
-                select: { status: true, date: true }
+                select: { status: true, date: true },
+            },
+            UnitService: {
+                take: 1,
+                orderBy: { updatedAt: "desc" },
+                where: { status: "PENDING" },
+                select: { id: true, status: true },
             },
         },
     });

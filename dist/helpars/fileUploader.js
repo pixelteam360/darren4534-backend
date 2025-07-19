@@ -53,9 +53,13 @@ const uploadFile = upload.single("file");
 // Upload multiple images
 const uploadMultipleImage = upload.fields([{ name: "images", maxCount: 15 }]);
 // Upload profile and banner images
-const updateProfile = upload.fields([
-    { name: "profile", maxCount: 1 },
-    { name: "banner", maxCount: 1 },
+const unitForm = upload.fields([
+    { name: "govtIssuedId", maxCount: 1 },
+    { name: "socialSecurityCard", maxCount: 1 },
+    { name: "pdfCopyOfLease", maxCount: 1 },
+    { name: "rentalApplication", maxCount: 1 },
+    { name: "petPolicyForm", maxCount: 1 },
+    { name: "backgroundCheck", maxCount: 1 },
 ]);
 // ✅ Fixed Cloudinary Upload (Now supports buffer)
 const uploadToCloudinary = (file) => __awaiter(void 0, void 0, void 0, function* () {
@@ -117,7 +121,7 @@ exports.fileUploader = {
     upload,
     uploadSingle,
     uploadMultipleImage,
-    updateProfile,
+    unitForm,
     uploadFile,
     cloudinaryUpload,
     uploadToDigitalOcean,

@@ -27,12 +27,6 @@ const unitFormSchema = z.object({
   permanentAddress: z.string().min(1),
   emergencyContact: z.string().min(10),
   reference: z.string().min(1),
-  govtIssuedId: z.string().min(1),
-  socialSecurityCard: z.string().min(1),
-  pdfCopyOfLease: z.string().url("Must be a valid URL"),
-  rentalApplication: z.string().url("Must be a valid URL"),
-  petPolicyForm: z.string().url("Must be a valid URL"),
-  backgroundCheck: z.string().url("Must be a valid URL"),
   unitId: z.string(),
 });
 
@@ -40,4 +34,5 @@ export const UnitValidation = {
   CreateUnitValidationSchema,
   UnitUpdateSchema,
   AssignTenanSchema,
+  unitFormSchema,
 };

@@ -13,6 +13,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UnitController = void 0;
+const http_status_1 = __importDefault(require("http-status"));
+const ApiErrors_1 = __importDefault(require("../../../errors/ApiErrors"));
 const catchAsync_1 = __importDefault(require("../../../shared/catchAsync"));
 const sendResponse_1 = __importDefault(require("../../../shared/sendResponse"));
 const Unit_service_1 = require("./Unit.service");
@@ -53,7 +55,21 @@ const varifyUnitCode = (0, catchAsync_1.default)((req, res) => __awaiter(void 0,
     });
 }));
 const unitForm = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield Unit_service_1.UnitService.unitForm(req.body, req.user.id);
+    const { govtIssuedId, socialSecurityCard, pdfCopyOfLease, rentalApplication, petPolicyForm, backgroundCheck, } = req.files;
+    const requiredFiles = {
+        govtIssuedId,
+        socialSecurityCard,
+        pdfCopyOfLease,
+        rentalApplication,
+        petPolicyForm,
+        backgroundCheck,
+    };
+    for (const [key, value] of Object.entries(requiredFiles)) {
+        if (!value || !Array.isArray(value) || value.length === 0) {
+            throw new ApiErrors_1.default(http_status_1.default.BAD_REQUEST, `${key} is missing`);
+        }
+    }
+    const result = yield Unit_service_1.UnitService.unitForm(req.body, req.user.id, govtIssuedId[0], socialSecurityCard[0], pdfCopyOfLease[0], rentalApplication[0], petPolicyForm[0], backgroundCheck[0]);
     (0, sendResponse_1.default)(res, {
         message: "Unit form submited successfully!",
         data: result,
@@ -65,5 +81,5 @@ exports.UnitController = {
     updateUnit,
     assignTenant,
     varifyUnitCode,
-    unitForm
+    unitForm,
 };
