@@ -34,43 +34,62 @@ const createUnitService = (payload, imageFile, userId) => __awaiter(void 0, void
     });
     return result;
 });
-const getUnitServicesFromDb = (userId) => __awaiter(void 0, void 0, void 0, function* () {
-    // const result = await prisma.UnitService.findMany({
-    //   where: { userId },
-    // });
-    // return result;
+const singleUnitService = (id) => __awaiter(void 0, void 0, void 0, function* () {
+    const res = yield prisma_1.default.unitService.findFirst({ where: { id } });
+    return res;
 });
-const UnitServiceUnits = (id) => __awaiter(void 0, void 0, void 0, function* () {
-    // const UnitServiceProfile = await prisma.unit.findMany({
-    //   where: { UnitServiceId: id },
-    //   select: {
-    //     id: true,
-    //     name: true,
-    //     floor: true,
-    //     AssignTenant: { select: { name: true } },
-    //     UnitPayment: {
-    //       take: 1,
-    //       orderBy: { updatedAt: "desc" },
-    //       where: { status: "PAID" },
-    //       select: { status: true, date: true },
-    //     },
-    //   },
-    // });
-    // return UnitServiceProfile;
+const providerService = (payload, userId) => __awaiter(void 0, void 0, void 0, function* () {
+    const providerService = yield prisma_1.default.providerService.findFirst({
+        where: { userId },
+        select: { id: true },
+    });
+    if (providerService) {
+        throw new ApiErrors_1.default(http_status_1.default.BAD_REQUEST, "You have already created your service");
+    }
+    const result = yield prisma_1.default.providerService.create({
+        data: Object.assign(Object.assign({}, payload), { userId }),
+    });
+    return result;
 });
-const updateUnitService = (payload, UnitServiceId, userId) => __awaiter(void 0, void 0, void 0, function* () {
-    // const result = await prisma.UnitService.update({
-    //   where: { id: UnitServiceId, userId },
-    //   data: payload,
-    // });
-    // if (!result) {
-    //   throw new ApiError(httpStatus.UNAUTHORIZED, "UNAUTHORIZED access");
-    // }
-    // return result;
+const myService = (userId) => __awaiter(void 0, void 0, void 0, function* () {
+    const res = yield prisma_1.default.providerService.findFirst({ where: { userId } });
+    return res;
+});
+const updateProviderService = (payload, userId) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield prisma_1.default.providerService.update({
+        where: { userId },
+        data: payload,
+    });
+    return result;
+});
+const myUnitServices = (userId) => __awaiter(void 0, void 0, void 0, function* () {
+    const providerService = yield prisma_1.default.providerService.findFirst({
+        where: { userId },
+        select: { id: true },
+    });
+    if (!providerService) {
+        throw new ApiErrors_1.default(http_status_1.default.NOT_FOUND, "User service not found");
+    }
+    const res = yield prisma_1.default.unitService.findMany({
+        where: { providerServiceId: providerService.id },
+        select: {
+            id: true,
+            title: true,
+            unit: {
+                select: {
+                    UnitForm: { select: { renterName: true, mobileNumber: true } },
+                    building: { select: { location: true } },
+                },
+            },
+        },
+    });
+    return res;
 });
 exports.UnitServiceService = {
     createUnitService,
-    getUnitServicesFromDb,
-    UnitServiceUnits,
-    updateUnitService,
+    singleUnitService,
+    providerService,
+    myService,
+    updateProviderService,
+    myUnitServices,
 };

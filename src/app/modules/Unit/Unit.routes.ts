@@ -38,6 +38,8 @@ router.post(
   UnitController.unitForm
 );
 
+router.get("/my", auth(UserRole.TENANT), UnitController.getMyUnit);
+
 router
   .route("/:id")
   .get(auth(), UnitController.singleUnits)

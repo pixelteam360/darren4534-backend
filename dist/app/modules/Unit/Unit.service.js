@@ -45,7 +45,9 @@ const singleUnits = (id) => __awaiter(void 0, void 0, void 0, function* () {
             floor: true,
             code: true,
             AssignTenant: { select: { name: true, rentAmount: true } },
-            UnitService: true,
+            UnitService: {
+                select: { id: true, title: true, createdAt: true, status: true },
+            },
             UnitForm: {
                 include: {
                     tenant: { select: { fullName: true, image: true, location: true } },
@@ -138,6 +140,27 @@ const unitForm = (payload, userId, govtIssuedIdFile, socialSecurityCardFile, pdf
     });
     return result;
 });
+const getMyUnit = (userId) => __awaiter(void 0, void 0, void 0, function* () {
+    const res = yield prisma_1.default.unitForm.findFirst({
+        where: { tenantId: userId },
+        select: {
+            renterName: true,
+            unit: {
+                select: {
+                    id: true,
+                    name: true,
+                    floor: true,
+                    UnitPayment: {
+                        where: { status: "PAID" },
+                        orderBy: { updatedAt: "desc" },
+                        select: { status: true, updatedAt: true },
+                    },
+                },
+            },
+        },
+    });
+    return res;
+});
 exports.UnitService = {
     createUnit,
     singleUnits,
@@ -145,4 +168,5 @@ exports.UnitService = {
     assignTenant,
     varifyUnitCode,
     unitForm,
+    getMyUnit,
 };

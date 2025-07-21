@@ -86,6 +86,14 @@ const unitForm = catchAsync(async (req, res) => {
   });
 });
 
+const getMyUnit = catchAsync(async (req, res) => {
+  const result = await UnitService.getMyUnit(req.user.id);
+  sendResponse(res, {
+    message: "Unit varified successfully!",
+    data: result,
+  });
+});
+
 export const UnitController = {
   createUnit,
   singleUnits,
@@ -93,4 +101,5 @@ export const UnitController = {
   assignTenant,
   varifyUnitCode,
   unitForm,
+  getMyUnit,
 };

@@ -1,6 +1,8 @@
 import catchAsync from "../../../shared/catchAsync";
+import pick from "../../../shared/pick";
 import sendResponse from "../../../shared/sendResponse";
 import { UnitServiceService } from "./UnitService.service";
+import { serviceFilterableFields } from "./user.costant";
 
 const createUnitService = catchAsync(async (req, res) => {
   const result = await UnitServiceService.createUnitService(
@@ -14,28 +16,47 @@ const createUnitService = catchAsync(async (req, res) => {
   });
 });
 
-const getUnitServices = catchAsync(async (req, res) => {
-  const result = await UnitServiceService.getUnitServicesFromDb(req.user.id);
+const singleUnitService = catchAsync(async (req, res) => {
+  const result = await UnitServiceService.singleUnitService(req.params.id);
   sendResponse(res, {
-    message: "UnitServices retrieve successfully!",
+    message: "UnitService retrieved successfully!",
     data: result,
   });
 });
 
-const UnitServiceUnits = catchAsync(async (req, res) => {
-  const result = await UnitServiceService.UnitServiceUnits(req.params.id);
-  sendResponse(res, {
-    message: "UnitService Units retrieved successfully",
-    data: result,
-  });
-});
-
-const updateUnitService = catchAsync(async (req, res) => {
-  const { id } = req?.user;
-  const result = await UnitServiceService.updateUnitService(
+const providerService = catchAsync(async (req, res) => {
+  const result = await UnitServiceService.providerService(
     req.body,
-    req.params.id,
-    id
+    req.user.id
+  );
+  sendResponse(res, {
+    message: "Provider Service Created successfully!",
+    data: result,
+  });
+});
+
+const getAllServices = catchAsync(async (req, res) => {
+  const filters = pick(req.query, serviceFilterableFields);
+  const options = pick(req.query, ["limit", "page", "sortBy", "sortOrder"]);
+  const result = await UnitServiceService.getAllServices(filters, options);
+  sendResponse(res, {
+    message: "Service retrieved successfully!",
+    data: result,
+  });
+});
+
+const myService = catchAsync(async (req, res) => {
+  const result = await UnitServiceService.myService(req.user.id);
+  sendResponse(res, {
+    message: "My provided Service retrieved successfully!",
+    data: result,
+  });
+});
+
+const updateProviderService = catchAsync(async (req, res) => {
+  const result = await UnitServiceService.updateProviderService(
+    req.body,
+    req.user.id
   );
   sendResponse(res, {
     message: "UnitService updated successfully!",
@@ -43,9 +64,41 @@ const updateUnitService = catchAsync(async (req, res) => {
   });
 });
 
+const myUnitServices = catchAsync(async (req, res) => {
+  const result = await UnitServiceService.myUnitServices(req.user.id);
+  sendResponse(res, {
+    message: "UnitService retrieved successfully!",
+    data: result,
+  });
+});
+
+const assignUnitService = catchAsync(async (req, res) => {
+  const result = await UnitServiceService.assignUnitService(
+    req.body,
+    req.user.id
+  );
+  sendResponse(res, {
+    message: "Assigned UnitService successfully!",
+    data: result,
+  });
+});
+
+const singleAssignedService = catchAsync(async (req, res) => {
+  const result = await UnitServiceService.singleAssignedService(req.params.id);
+  sendResponse(res, {
+    message: "Assigned UnitService retrieved successfully!",
+    data: result,
+  });
+});
+
 export const UnitServiceController = {
   createUnitService,
-  getUnitServices,
-  UnitServiceUnits,
-  updateUnitService,
+  singleUnitService,
+  providerService,
+  getAllServices,
+  myService,
+  updateProviderService,
+  myUnitServices,
+  assignUnitService,
+  singleAssignedService,
 };

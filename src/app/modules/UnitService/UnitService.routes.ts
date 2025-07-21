@@ -10,10 +10,6 @@ const router = express.Router();
 
 router
   .route("/")
-  .get(
-    auth(UserRole.LANDLORD, UserRole.TENANT),
-    UnitServiceController.getUnitServices
-  )
   .post(
     auth(UserRole.TENANT),
     fileUploader.uploadSingle,
@@ -23,11 +19,39 @@ router
     },
     validateRequest(UnitServiceValidation.unitServiceSchema),
     UnitServiceController.createUnitService
+  )
+  .get(
+    auth(UserRole.LANDLORD, UserRole.ADMIN),
+    UnitServiceController.getAllServices
   );
 
 router
-  .route("/:id")
-  .get(auth(), UnitServiceController.UnitServiceUnits)
-  .put(auth(UserRole.LANDLORD), UnitServiceController.updateUnitService);
+  .route("/provider")
+  .post(
+    auth(UserRole.SERVICE_PROVIDER),
+    validateRequest(UnitServiceValidation.ProviderServiceSchema),
+    UnitServiceController.providerService
+  );
+
+router
+  .route("/my-service")
+  .get(auth(UserRole.SERVICE_PROVIDER), UnitServiceController.myService)
+  .put(
+    auth(UserRole.SERVICE_PROVIDER),
+    UnitServiceController.updateProviderService
+  );
+
+router
+  .route("/assign")
+  .post(
+    auth(UserRole.LANDLORD),
+    validateRequest(UnitServiceValidation.AssignUnitServiceSchema),
+    UnitServiceController.assignUnitService
+  )
+  .get(auth(UserRole.SERVICE_PROVIDER), UnitServiceController.myUnitServices);
+
+router.route("/:id").get(auth(), UnitServiceController.singleUnitService);
+
+router.get("/assign/:id", auth(), UnitServiceController.singleAssignedService);
 
 export const UnitServiceRoutes = router;

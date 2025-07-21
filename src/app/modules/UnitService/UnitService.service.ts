@@ -1,9 +1,16 @@
 import prisma from "../../../shared/prisma";
-import { UnitService } from "@prisma/client";
+import { Prisma, ProviderService, UnitService } from "@prisma/client";
 import ApiError from "../../../errors/ApiErrors";
 import httpStatus from "http-status";
-import { TUnitService } from "./UnitService.interface";
+import {
+  IServiceFilterRequest,
+  TProviderService,
+  TUnitService,
+} from "./UnitService.interface";
 import { fileUploader } from "../../../helpars/fileUploader";
+import { paginationHelper } from "../../../helpars/paginationHelper";
+import { IPaginationOptions } from "../../../interfaces/paginations";
+import { serviceSearchAbleFields } from "./user.costant";
 
 const createUnitService = async (
   payload: TUnitService,
@@ -32,54 +39,225 @@ const createUnitService = async (
   return result;
 };
 
-const getUnitServicesFromDb = async (userId: string) => {
-  // const result = await prisma.UnitService.findMany({
-  //   where: { userId },
-  // });
-
-  // return result;
+const singleUnitService = async (id: string) => {
+  const res = await prisma.unitService.findFirst({ where: { id } });
+  return res;
 };
 
-const UnitServiceUnits = async (id: string) => {
-  // const UnitServiceProfile = await prisma.unit.findMany({
-  //   where: { UnitServiceId: id },
+const providerService = async (payload: TProviderService, userId: string) => {
+  const providerService = await prisma.providerService.findFirst({
+    where: { userId },
+    select: { id: true },
+  });
 
-  //   select: {
-  //     id: true,
-  //     name: true,
-  //     floor: true,
-  //     AssignTenant: { select: { name: true } },
-  //     UnitPayment: {
-  //       take: 1,
-  //       orderBy: { updatedAt: "desc" },
-  //       where: { status: "PAID" },
-  //       select: { status: true, date: true },
-  //     },
-  //   },
-  // });
+  if (providerService) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "You have already created your service"
+    );
+  }
 
-  // return UnitServiceProfile;
+  const result = await prisma.providerService.create({
+    data: { ...payload, userId },
+  });
+
+  return result;
 };
 
-const updateUnitService = async (
-  payload: UnitService,
-  UnitServiceId: string,
+const getAllServices = async (
+  params: IServiceFilterRequest,
+  options: IPaginationOptions
+) => {
+  const { page, limit, skip } = paginationHelper.calculatePagination(options);
+  const { searchTerm, ...filterData } = params;
+
+  const andConditions: Prisma.ProviderServiceWhereInput[] = [];
+
+  if (params.searchTerm) {
+    andConditions.push({
+      OR: serviceSearchAbleFields.map((field) => ({
+        [field]: {
+          contains: params.searchTerm,
+          mode: "insensitive",
+        },
+      })),
+    });
+  }
+
+  if (Object.keys(filterData).length > 0) {
+    andConditions.push({
+      AND: Object.keys(filterData).map((key) => ({
+        [key]: {
+          equals: (filterData as any)[key],
+        },
+      })),
+    });
+  }
+
+  const whereConditions: Prisma.ProviderServiceWhereInput = {
+    AND: andConditions,
+  };
+
+  const result = await prisma.providerService.findMany({
+    where: whereConditions,
+    skip,
+    take: limit,
+    orderBy:
+      options.sortBy && options.sortOrder
+        ? {
+            [options.sortBy]: options.sortOrder,
+          }
+        : {
+            createdAt: "desc",
+          },
+  });
+  const total = await prisma.providerService.count({
+    where: whereConditions,
+  });
+
+  return {
+    meta: {
+      page,
+      limit,
+      total,
+    },
+    data: result,
+  };
+};
+
+const myService = async (userId: string) => {
+  const res = await prisma.providerService.findFirst({ where: { userId } });
+
+  return res;
+};
+
+const updateProviderService = async (
+  payload: Partial<ProviderService>,
   userId: string
 ) => {
-  // const result = await prisma.UnitService.update({
-  //   where: { id: UnitServiceId, userId },
-  //   data: payload,
-  // });
+  const result = await prisma.providerService.update({
+    where: { userId },
+    data: payload,
+  });
 
-  // if (!result) {
-  //   throw new ApiError(httpStatus.UNAUTHORIZED, "UNAUTHORIZED access");
-  // }
-  // return result;
+  return result;
+};
+
+const myUnitServices = async (userId: string) => {
+  const providerService = await prisma.providerService.findFirst({
+    where: { userId },
+    select: { id: true },
+  });
+
+  if (!providerService) {
+    throw new ApiError(httpStatus.NOT_FOUND, "User service not found");
+  }
+
+  const res = await prisma.assignService.findMany({
+    where: { providerServiceId: providerService.id },
+    select: {
+      id: true,
+      status: true,
+      unitService: {
+        select: {
+          unit: {
+            select: { building: { select: { name: true, location: true } } },
+          },
+          tenant: { select: { fullName: true, phoneNumber: true } },
+        },
+      },
+    },
+  });
+  return res;
+};
+
+const assignUnitService = async (
+  payload: {
+    providerServiceId: string;
+    unitServiceId: string;
+    assignDate: string;
+  },
+  userId: string
+) => {
+  const assignService = await prisma.assignService.findFirst({
+    where: { unitServiceId: payload.unitServiceId },
+  });
+
+  if (assignService) {
+    throw new ApiError(
+      httpStatus.NOT_FOUND,
+      "This unit service is already assigned"
+    );
+  }
+
+  const unit = await prisma.unitService.findFirst({
+    where: { id: payload.unitServiceId, unit: { building: { userId } } },
+  });
+
+  if (!unit) {
+    throw new ApiError(
+      httpStatus.NOT_FOUND,
+      "Unit not found or it's not you building unit"
+    );
+  }
+  const providerService = await prisma.providerService.findFirst({
+    where: { id: payload.providerServiceId },
+  });
+
+  if (!providerService) {
+    throw new ApiError(httpStatus.NOT_FOUND, "providerService not found");
+  }
+
+  const result = await prisma.$transaction(async (prisma) => {
+    const assignService = await prisma.assignService.create({
+      data: payload,
+    });
+
+    await prisma.unitService.update({
+      where: { id: payload.unitServiceId },
+      data: { status: "ONGOING" },
+    });
+
+    return assignService;
+  });
+
+  return result;
+};
+
+const singleAssignedService = async (id: string) => {
+  const res = await prisma.assignService.findFirst({
+    where: { id },
+    select: {
+      assignDate: true,
+      unitService: {
+        select: {
+          title: true,
+          reason: true,
+          unit: {
+            select: {
+              building: {
+                select: {
+                  user: { select: { fullName: true, phoneNumber: true } },
+                },
+              },
+              UnitForm: { select: { renterName: true, mobileNumber: true } },
+            },
+          },
+        },
+      },
+    },
+  });
+  return res;
 };
 
 export const UnitServiceService = {
   createUnitService,
-  getUnitServicesFromDb,
-  UnitServiceUnits,
-  updateUnitService,
+  singleUnitService,
+  providerService,
+  getAllServices,
+  myService,
+  updateProviderService,
+  myUnitServices,
+  assignUnitService,
+  singleAssignedService,
 };

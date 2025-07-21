@@ -14,13 +14,17 @@ const fileUploader_1 = require("../../../helpars/fileUploader");
 const router = express_1.default.Router();
 router
     .route("/")
-    .get((0, auth_1.default)(client_1.UserRole.LANDLORD, client_1.UserRole.TENANT), UnitService_controller_1.UnitServiceController.getUnitServices)
     .post((0, auth_1.default)(client_1.UserRole.TENANT), fileUploader_1.fileUploader.uploadSingle, (req, res, next) => {
     req.body = JSON.parse(req.body.data);
     next();
-}, (0, validateRequest_1.default)(UnitService_validation_1.UnitServiceValidation.unitServiceSchema), UnitService_controller_1.UnitServiceController.createUnitService);
+}, (0, validateRequest_1.default)(UnitService_validation_1.UnitServiceValidation.unitServiceSchema), UnitService_controller_1.UnitServiceController.createUnitService)
+    .get((0, auth_1.default)(client_1.UserRole.SERVICE_PROVIDER), UnitService_controller_1.UnitServiceController.myUnitServices);
 router
-    .route("/:id")
-    .get((0, auth_1.default)(), UnitService_controller_1.UnitServiceController.UnitServiceUnits)
-    .put((0, auth_1.default)(client_1.UserRole.LANDLORD), UnitService_controller_1.UnitServiceController.updateUnitService);
+    .route("/provider")
+    .post((0, auth_1.default)(client_1.UserRole.SERVICE_PROVIDER), (0, validateRequest_1.default)(UnitService_validation_1.UnitServiceValidation.ProviderServiceSchema), UnitService_controller_1.UnitServiceController.providerService);
+router
+    .route("/my-service")
+    .get((0, auth_1.default)(client_1.UserRole.SERVICE_PROVIDER), UnitService_controller_1.UnitServiceController.myService)
+    .put((0, auth_1.default)(client_1.UserRole.SERVICE_PROVIDER), UnitService_controller_1.UnitServiceController.updateProviderService);
+router.route("/:id").get((0, auth_1.default)(), UnitService_controller_1.UnitServiceController.singleUnitService);
 exports.UnitServiceRoutes = router;

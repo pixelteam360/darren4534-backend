@@ -23,31 +23,46 @@ const createUnitService = (0, catchAsync_1.default)((req, res) => __awaiter(void
         data: result,
     });
 }));
-const getUnitServices = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield UnitService_service_1.UnitServiceService.getUnitServicesFromDb(req.user.id);
+const singleUnitService = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield UnitService_service_1.UnitServiceService.singleUnitService(req.params.id);
     (0, sendResponse_1.default)(res, {
-        message: "UnitServices retrieve successfully!",
+        message: "UnitService retrieved successfully!",
         data: result,
     });
 }));
-const UnitServiceUnits = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield UnitService_service_1.UnitServiceService.UnitServiceUnits(req.params.id);
+const providerService = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield UnitService_service_1.UnitServiceService.providerService(req.body, req.user.id);
     (0, sendResponse_1.default)(res, {
-        message: "UnitService Units retrieved successfully",
+        message: "Provider Service Created successfully!",
         data: result,
     });
 }));
-const updateUnitService = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { id } = req === null || req === void 0 ? void 0 : req.user;
-    const result = yield UnitService_service_1.UnitServiceService.updateUnitService(req.body, req.params.id, id);
+const myService = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield UnitService_service_1.UnitServiceService.myService(req.user.id);
+    (0, sendResponse_1.default)(res, {
+        message: "My provided Service retrieved successfully!",
+        data: result,
+    });
+}));
+const updateProviderService = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield UnitService_service_1.UnitServiceService.updateProviderService(req.body, req.user.id);
     (0, sendResponse_1.default)(res, {
         message: "UnitService updated successfully!",
         data: result,
     });
 }));
+const myUnitServices = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield UnitService_service_1.UnitServiceService.myUnitServices(req.user.id);
+    (0, sendResponse_1.default)(res, {
+        message: "UnitService retrieved successfully!",
+        data: result,
+    });
+}));
 exports.UnitServiceController = {
     createUnitService,
-    getUnitServices,
-    UnitServiceUnits,
-    updateUnitService,
+    singleUnitService,
+    providerService,
+    myService,
+    updateProviderService,
+    myUnitServices
 };

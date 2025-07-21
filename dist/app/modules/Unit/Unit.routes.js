@@ -23,6 +23,7 @@ router.post("/form", (0, auth_1.default)(client_1.UserRole.TENANT), fileUploader
     req.body = JSON.parse(req.body.data);
     next();
 }, (0, validateRequest_1.default)(Unit_validation_1.UnitValidation.unitFormSchema), Unit_controller_1.UnitController.unitForm);
+router.get("/my", (0, auth_1.default)(client_1.UserRole.TENANT), Unit_controller_1.UnitController.getMyUnit);
 router
     .route("/:id")
     .get((0, auth_1.default)(), Unit_controller_1.UnitController.singleUnits)

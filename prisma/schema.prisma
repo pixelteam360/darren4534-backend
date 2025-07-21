@@ -8,31 +8,48 @@ datasource db {
 }
 
 model User {
-  id               String        @id @default(auto()) @map("_id") @db.ObjectId
+  id               String           @id @default(auto()) @map("_id") @db.ObjectId
   fullName         String
-  image            String?       @default("")
-  email            String        @unique
+  image            String?          @default("")
+  email            String           @unique
   password         String
-  location         String?       @default("")
-  phoneNumber      String?       @default("")
-  about            String?       @default("")
-  fcmToken         String?       @default("")
-  varifiedEmail    Boolean       @default(false)
-  isDeleted        Boolean       @default(false)
+  location         String?          @default("")
+  phoneNumber      String?          @default("")
+  about            String?          @default("")
+  fcmToken         String?          @default("")
+  varifiedEmail    Boolean          @default(false)
+  isDeleted        Boolean          @default(false)
   expirationOtp    DateTime?
   otp              Int?
   role             UserRole
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
   UnitForm         UnitForm?
   Building         Building[]
-  sentRooms        Room[]        @relation("RoomSender")
-  receivedRooms    Room[]        @relation("RoomReceiver")
-  sentMessages     Chat[]        @relation("ChatSender")
-  receivedMessages Chat[]        @relation("ChatReceiver")
+  sentRooms        Room[]           @relation("RoomSender")
+  receivedRooms    Room[]           @relation("RoomReceiver")
+  sentMessages     Chat[]           @relation("ChatSender")
+  receivedMessages Chat[]           @relation("ChatReceiver")
   UnitService      UnitService[]
+  ProviderService  ProviderService?
 
   @@map("Users")
+}
+
+model ProviderService {
+  id            String          @id @default(auto()) @map("_id") @db.ObjectId
+  name          String
+  location      String
+  charge        String
+  category      String
+  phoneNumber   String
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  userId        String          @unique @db.ObjectId()
+  user          User            @relation(fields: [userId], references: [id])
+  AssignService AssignService[]
+
+  @@map("Provider-Service")
 }
 
 model Building {
@@ -106,19 +123,34 @@ model UnitForm {
 }
 
 model UnitService {
-  id        String        @id @default(auto()) @map("_id") @db.ObjectId
-  title     String
-  reason    String
-  image     String
-  status    serviceStatus @default(PENDING)
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
-  unitId    String        @db.ObjectId()
-  unit      Unit?         @relation(fields: [unitId], references: [id])
-  tenantId  String        @db.ObjectId()
-  tenant    User          @relation(fields: [tenantId], references: [id])
+  id            String         @id @default(auto()) @map("_id") @db.ObjectId
+  title         String
+  reason        String
+  image         String
+  status        serviceStatus  @default(PENDING)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  unitId        String         @db.ObjectId()
+  tenantId      String         @db.ObjectId()
+  unit          Unit?          @relation(fields: [unitId], references: [id])
+  tenant        User           @relation(fields: [tenantId], references: [id])
+  AssignService AssignService?
 
   @@map("Unit-Service")
+}
+
+model AssignService {
+  id                String          @id @default(auto()) @map("_id") @db.ObjectId
+  status            serviceStatus   @default(ONGOING)
+  assignDate        DateTime
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  providerServiceId String          @db.ObjectId()
+  providerService   ProviderService @relation(fields: [providerServiceId], references: [id])
+  unitServiceId     String          @unique @db.ObjectId()
+  unitService       UnitService     @relation(fields: [unitServiceId], references: [id])
+
+  @@map("Assign-Service")
 }
 
 model UnitPayment {
@@ -131,22 +163,6 @@ model UnitPayment {
   unit      Unit?         @relation(fields: [unitId], references: [id])
 
   @@map("Unit-Payment")
-}
-
-model Service {
-  id               String  @id @default(auto()) @map("_id") @db.ObjectId
-  renterName       String
-  mobileNumber     String
-  sourceOfIncome   String
-  permanentAddress String
-  emergencyContact String
-  reference        String
-  agreedToTerms    Boolean @default(false)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("Service")
 }
 
 model Room {

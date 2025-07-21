@@ -41,7 +41,9 @@ const singleUnits = async (id: string) => {
       floor: true,
       code: true,
       AssignTenant: { select: { name: true, rentAmount: true } },
-      UnitService: true,
+      UnitService: {
+        select: { id: true, title: true, createdAt: true, status: true },
+      },
       UnitForm: {
         include: {
           tenant: { select: { fullName: true, image: true, location: true } },
@@ -187,6 +189,29 @@ const unitForm = async (
   return result;
 };
 
+const getMyUnit = async (userId: string) => {
+  const res = await prisma.unitForm.findFirst({
+    where: { tenantId: userId },
+    select: {
+      renterName: true,
+      unit: {
+        select: {
+          id: true,
+          name: true,
+          floor: true,
+          UnitPayment: {
+            where: { status: "PAID" },
+            orderBy: { updatedAt: "desc" },
+            select: { status: true, updatedAt: true },
+          },
+        },
+      },
+    },
+  });
+
+  return res;
+};
+
 export const UnitService = {
   createUnit,
   singleUnits,
@@ -194,4 +219,5 @@ export const UnitService = {
   assignTenant,
   varifyUnitCode,
   unitForm,
+  getMyUnit,
 };
