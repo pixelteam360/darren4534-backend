@@ -128,12 +128,12 @@ const unitForm = (payload, userId, govtIssuedIdFile, socialSecurityCardFile, pdf
         throw new ApiErrors_1.default(http_status_1.default.BAD_REQUEST, "This unit is already assigned");
     }
     const [govtIssuedId, socialSecurityCard, pdfCopyOfLease, rentalApplication, petPolicyForm, backgroundCheck,] = yield Promise.all([
-        fileUploader_1.fileUploader.uploadToCloudinary(govtIssuedIdFile),
-        fileUploader_1.fileUploader.uploadToCloudinary(socialSecurityCardFile),
-        fileUploader_1.fileUploader.uploadToCloudinary(pdfCopyOfLeaseFile),
-        fileUploader_1.fileUploader.uploadToCloudinary(rentalApplicationFile),
-        fileUploader_1.fileUploader.uploadToCloudinary(petPolicyFormFile),
-        fileUploader_1.fileUploader.uploadToCloudinary(backgroundCheckFile),
+        fileUploader_1.fileUploader.uploadToDigitalOcean(govtIssuedIdFile),
+        fileUploader_1.fileUploader.uploadToDigitalOcean(socialSecurityCardFile),
+        fileUploader_1.fileUploader.uploadToDigitalOcean(pdfCopyOfLeaseFile),
+        fileUploader_1.fileUploader.uploadToDigitalOcean(rentalApplicationFile),
+        fileUploader_1.fileUploader.uploadToDigitalOcean(petPolicyFormFile),
+        fileUploader_1.fileUploader.uploadToDigitalOcean(backgroundCheckFile),
     ]);
     const result = yield prisma_1.default.unitForm.create({
         data: Object.assign(Object.assign({}, payload), { tenantId: userId, govtIssuedId: govtIssuedId.Location, socialSecurityCard: socialSecurityCard.Location, pdfCopyOfLease: pdfCopyOfLease.Location, rentalApplication: rentalApplication.Location, petPolicyForm: petPolicyForm.Location, backgroundCheck: backgroundCheck.Location }),

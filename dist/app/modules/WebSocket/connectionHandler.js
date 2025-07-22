@@ -15,6 +15,7 @@ const handleFetchChats_1 = require("./eventHandlers/handleFetchChats");
 const handleMessage_1 = require("./eventHandlers/handleMessage");
 const handleMessageList_1 = require("./eventHandlers/handleMessageList");
 const handleUnReadMessages_1 = require("./eventHandlers/handleUnReadMessages");
+const messageToAdmin_1 = require("./eventHandlers/messageToAdmin");
 function handleConnection(ws, wss) {
     ws.on("message", (data) => __awaiter(this, void 0, void 0, function* () {
         try {
@@ -26,6 +27,9 @@ function handleConnection(ws, wss) {
                     break;
                 case "message":
                     yield (0, handleMessage_1.handleMessage)(ws, parsed);
+                    break;
+                case "messageToAdmin":
+                    yield (0, messageToAdmin_1.messageToAdmin)(ws, parsed);
                     break;
                 case "fetchChats":
                     yield (0, handleFetchChats_1.handleFetchChats)(ws, parsed);

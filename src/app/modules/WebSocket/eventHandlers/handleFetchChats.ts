@@ -1,31 +1,11 @@
 import prisma from "../../../../shared/prisma";
 import { ExtendedWebSocket } from "../types";
 
-const onlineUsers = new Set<string>();
-
 export async function handleFetchChats(ws: ExtendedWebSocket, data: any) {
-  const { receiverId } = data;
-  if (!ws.userId) {
-    console.log("User not authenticated");
-    return;
-  }
-
-  const room = await prisma.room.findFirst({
-    where: {
-      OR: [
-        { senderId: ws.userId, receiverId },
-        { senderId: receiverId, receiverId: ws.userId },
-      ],
-    },
-  });
-
-  if (!room) {
-    ws.send(JSON.stringify({ event: "fetchChats", data: [] }));
-    return;
-  }
+  const { roomId } = data;
 
   const chats = await prisma.chat.findMany({
-    where: { roomId: room.id },
+    where: { roomId: roomId },
     orderBy: { createdAt: "asc" },
     select: {
       id: true,
@@ -42,7 +22,7 @@ export async function handleFetchChats(ws: ExtendedWebSocket, data: any) {
   });
 
   await prisma.chat.updateMany({
-    where: { roomId: room.id, receiverId: ws.userId },
+    where: { roomId: roomId },
     data: { isRead: true },
   });
 
@@ -50,7 +30,6 @@ export async function handleFetchChats(ws: ExtendedWebSocket, data: any) {
     JSON.stringify({
       event: "fetchChats",
       data: chats,
-      onlineUsers: onlineUsers.has(receiverId),
     })
   );
 }

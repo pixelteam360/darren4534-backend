@@ -13,7 +13,7 @@ const UnitUpdateSchema = z.object({
 });
 
 const AssignTenanSchema = z.object({
-  name: z.string().min(1, "Name is required"),
+  name: z.string().min(1, "Name is required").optional(),
   contractMonth: z.number().int().min(1, "Contract month must be at least 1"),
   startDate: z.coerce.date(),
   rentAmount: z.number().nonnegative("Rent amount must be non-negative"),

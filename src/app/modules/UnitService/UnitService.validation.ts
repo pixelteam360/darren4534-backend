@@ -1,10 +1,8 @@
-import { serviceStatus } from "@prisma/client";
-import { nativeEnum, z } from "zod";
+import { z } from "zod";
 
 const unitServiceSchema = z.object({
   title: z.string().min(1, "Title is required"),
   reason: z.string().min(1, "Reason is required"),
-  status: nativeEnum(serviceStatus),
   unitId: z.string(),
 });
 

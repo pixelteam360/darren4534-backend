@@ -37,7 +37,7 @@ const loginUser = async (payload: { email: string; password: string }) => {
     throw new ApiError(httpStatus.BAD_REQUEST, "Password incorrect!");
   }
 
-  if (!userData.varifiedEmail) {
+  if (!userData.varifiedEmail && userData.role !== "ADMIN") {
     // Generate a new OTP
     const otp = Number(crypto.randomInt(1000, 9999));
 
@@ -86,7 +86,7 @@ const loginUser = async (payload: { email: string; password: string }) => {
     });
 
     return {
-      message: "Email varification code sended successfully",
+      message: "Email verification code sended successfully",
       varifiedEmail: userData.varifiedEmail,
     };
   }

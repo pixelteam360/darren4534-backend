@@ -40,7 +40,38 @@ const createUnitService = async (
 };
 
 const singleUnitService = async (id: string) => {
-  const res = await prisma.unitService.findFirst({ where: { id } });
+  const assignedService = await prisma.assignService.findFirst({
+    where: { unitServiceId: id },
+    select: { id: true },
+  });
+
+  const res = await prisma.assignService.findFirst({
+    where: { id: assignedService?.id },
+    select: {
+      assignDate: true,
+      unitService: {
+        select: {
+          title: true,
+          reason: true,
+          unit: {
+            select: {
+              building: {
+                select: {
+                  user: { select: { fullName: true, phoneNumber: true } },
+                },
+              },
+              UnitForm: { select: { renterName: true, mobileNumber: true } },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!res) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Data not found");
+  }
+
   return res;
 };
 
@@ -179,8 +210,14 @@ const assignUnitService = async (
   },
   userId: string
 ) => {
+  const user = await prisma.user.findFirst({
+    where: { id: userId },
+    select: { fullName: true },
+  });
+
   const assignService = await prisma.assignService.findFirst({
     where: { unitServiceId: payload.unitServiceId },
+    select: { id: true },
   });
 
   if (assignService) {
@@ -191,7 +228,11 @@ const assignUnitService = async (
   }
 
   const unit = await prisma.unitService.findFirst({
-    where: { id: payload.unitServiceId, unit: { building: { userId } } },
+    where: {
+      id: payload.unitServiceId,
+      unit: { building: { userId } },
+    },
+    select: { tenant: { select: { id: true, fullName: true } } },
   });
 
   if (!unit) {
@@ -202,11 +243,14 @@ const assignUnitService = async (
   }
   const providerService = await prisma.providerService.findFirst({
     where: { id: payload.providerServiceId },
+    select: { user: { select: { id: true, fullName: true } } },
   });
 
   if (!providerService) {
     throw new ApiError(httpStatus.NOT_FOUND, "providerService not found");
   }
+
+  const memberIds = [userId, providerService.user.id, unit.tenant.id];
 
   const result = await prisma.$transaction(async (prisma) => {
     const assignService = await prisma.assignService.create({
@@ -216,6 +260,20 @@ const assignUnitService = async (
     await prisma.unitService.update({
       where: { id: payload.unitServiceId },
       data: { status: "ONGOING" },
+    });
+
+    await prisma.room.create({
+      data: {
+        name: `${providerService.user.fullName} ${unit.tenant.fullName} ${user?.fullName}`,
+        type: "GROUP",
+        users: {
+          create: [
+            ...memberIds.map((userId: string) => ({
+              user: { connect: { id: userId } },
+            })),
+          ],
+        },
+      },
     });
 
     return assignService;

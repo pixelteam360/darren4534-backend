@@ -18,7 +18,7 @@ router
     req.body = JSON.parse(req.body.data);
     next();
 }, (0, validateRequest_1.default)(UnitService_validation_1.UnitServiceValidation.unitServiceSchema), UnitService_controller_1.UnitServiceController.createUnitService)
-    .get((0, auth_1.default)(client_1.UserRole.SERVICE_PROVIDER), UnitService_controller_1.UnitServiceController.myUnitServices);
+    .get((0, auth_1.default)(client_1.UserRole.LANDLORD, client_1.UserRole.ADMIN), UnitService_controller_1.UnitServiceController.getAllServices);
 router
     .route("/provider")
     .post((0, auth_1.default)(client_1.UserRole.SERVICE_PROVIDER), (0, validateRequest_1.default)(UnitService_validation_1.UnitServiceValidation.ProviderServiceSchema), UnitService_controller_1.UnitServiceController.providerService);
@@ -26,5 +26,10 @@ router
     .route("/my-service")
     .get((0, auth_1.default)(client_1.UserRole.SERVICE_PROVIDER), UnitService_controller_1.UnitServiceController.myService)
     .put((0, auth_1.default)(client_1.UserRole.SERVICE_PROVIDER), UnitService_controller_1.UnitServiceController.updateProviderService);
+router
+    .route("/assign")
+    .post((0, auth_1.default)(client_1.UserRole.LANDLORD), (0, validateRequest_1.default)(UnitService_validation_1.UnitServiceValidation.AssignUnitServiceSchema), UnitService_controller_1.UnitServiceController.assignUnitService)
+    .get((0, auth_1.default)(client_1.UserRole.SERVICE_PROVIDER), UnitService_controller_1.UnitServiceController.myUnitServices);
 router.route("/:id").get((0, auth_1.default)(), UnitService_controller_1.UnitServiceController.singleUnitService);
+router.get("/assign/:id", (0, auth_1.default)(), UnitService_controller_1.UnitServiceController.singleAssignedService);
 exports.UnitServiceRoutes = router;

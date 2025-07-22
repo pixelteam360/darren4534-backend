@@ -25,6 +25,51 @@ const landLordOverview = async (userId: string) => {
   };
 };
 
+const tenantOverview = async (userId: string) => {
+  const unitForm = await prisma.unitForm.findFirst({
+    where: { tenantId: userId },
+    select: { unitId: true },
+  });
+
+  const unitPayment = await prisma.unitPayment.findFirst({
+    where: { unitId: unitForm?.unitId },
+    orderBy: { updatedAt: "desc" },
+    take: 1,
+    select: { updatedAt: true },
+  });
+
+  const serviceRequest = await prisma.unitService.count({
+    where: { tenantId: userId },
+  });
+
+  return {
+    serviceRequest,
+    lastPayRent: unitPayment,
+  };
+};
+
+const serviceProviderOverview = async (userId: string) => {
+  const totalProject = await prisma.assignService.count({
+    where: { providerService: { userId } },
+  });
+  const pendingProject = await prisma.assignService.count({
+    where: { providerService: { userId }, status: "ONGOING" },
+  });
+
+  return { totalProject, pendingProject };
+};
+
+const adminOverview = async (userId: string) => {
+  const totalBuilding = await prisma.building.count();
+  const totalUnit = await prisma.unit.count();
+  const totalService = await prisma.unitService.count();
+
+  return { totalBuilding, totalUnit, totalService };
+};
+
 export const DashboardService = {
   landLordOverview,
+  tenantOverview,
+  serviceProviderOverview,
+  adminOverview
 };

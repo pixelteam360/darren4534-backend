@@ -26,12 +26,11 @@ model User {
   updatedAt        DateTime         @updatedAt
   UnitForm         UnitForm?
   Building         Building[]
-  sentRooms        Room[]           @relation("RoomSender")
-  receivedRooms    Room[]           @relation("RoomReceiver")
   sentMessages     Chat[]           @relation("ChatSender")
   receivedMessages Chat[]           @relation("ChatReceiver")
   UnitService      UnitService[]
   ProviderService  ProviderService?
+  RoomUser         RoomUser[]
 
   @@map("Users")
 }
@@ -85,7 +84,7 @@ model Unit {
 
 model AssignTenant {
   id            String   @id @default(auto()) @map("_id") @db.ObjectId
-  name          String
+  name          String?
   contractMonth Int
   startDate     DateTime
   rentAmount    Float
@@ -94,7 +93,7 @@ model AssignTenant {
   unitId        String   @unique @db.ObjectId()
   unit          Unit?    @relation(fields: [unitId], references: [id])
 
-  @@map("landlord-Tenant")
+  @@map("Assign-Tenant")
 }
 
 model UnitForm {
@@ -165,34 +164,47 @@ model UnitPayment {
   @@map("Unit-Payment")
 }
 
+
 model Room {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  senderId   String   @db.ObjectId
-  receiverId String   @db.ObjectId
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  sender     User     @relation("RoomSender", fields: [senderId], references: [id])
-  receiver   User     @relation("RoomReceiver", fields: [receiverId], references: [id])
-  chat       Chat[]
+  id        String     @id @default(auto()) @map("_id") @db.ObjectId
+  name      String?
+  type      RoomType   @default(ONE_TO_ONE)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  users     RoomUser[]
+  chat      Chat[]
 
   @@map("Rooms")
 }
 
 model Chat {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  message    String
-  images     String?  @default("")
-  isRead     Boolean  @default(false)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  senderId   String   @db.ObjectId
-  receiverId String   @db.ObjectId
-  roomId     String   @db.ObjectId
-  sender     User     @relation("ChatSender", fields: [senderId], references: [id])
-  receiver   User     @relation("ChatReceiver", fields: [receiverId], references: [id])
-  room       Room     @relation(fields: [roomId], references: [id])
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  message   String
+  images    String?  @default("")
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  senderId   String  @db.ObjectId
+  receiverId String? @db.ObjectId
+  roomId     String  @db.ObjectId
+
+  sender   User  @relation("ChatSender", fields: [senderId], references: [id])
+  receiver User? @relation("ChatReceiver", fields: [receiverId], references: [id])
+  room     Room  @relation(fields: [roomId], references: [id])
 
   @@map("Chats")
+}
+
+model RoomUser {
+  id     String @id @default(auto()) @map("_id") @db.ObjectId
+  room   Room   @relation(fields: [roomId], references: [id])
+  roomId String @db.ObjectId
+  user   User   @relation(fields: [userId], references: [id])
+  userId String @db.ObjectId
+
+  @@unique([roomId, userId])
+  @@map("RoomUsers")
 }
 
 enum UserRole {
@@ -211,4 +223,9 @@ enum serviceStatus {
   PENDING
   ONGOING
   SOLVED
+}
+
+enum RoomType {
+  ONE_TO_ONE
+  GROUP
 }

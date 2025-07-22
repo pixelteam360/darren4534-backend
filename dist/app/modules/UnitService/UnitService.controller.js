@@ -14,8 +14,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UnitServiceController = void 0;
 const catchAsync_1 = __importDefault(require("../../../shared/catchAsync"));
+const pick_1 = __importDefault(require("../../../shared/pick"));
 const sendResponse_1 = __importDefault(require("../../../shared/sendResponse"));
 const UnitService_service_1 = require("./UnitService.service");
+const user_costant_1 = require("./user.costant");
 const createUnitService = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield UnitService_service_1.UnitServiceService.createUnitService(req.body, req.file, req.user.id);
     (0, sendResponse_1.default)(res, {
@@ -34,6 +36,15 @@ const providerService = (0, catchAsync_1.default)((req, res) => __awaiter(void 0
     const result = yield UnitService_service_1.UnitServiceService.providerService(req.body, req.user.id);
     (0, sendResponse_1.default)(res, {
         message: "Provider Service Created successfully!",
+        data: result,
+    });
+}));
+const getAllServices = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const filters = (0, pick_1.default)(req.query, user_costant_1.serviceFilterableFields);
+    const options = (0, pick_1.default)(req.query, ["limit", "page", "sortBy", "sortOrder"]);
+    const result = yield UnitService_service_1.UnitServiceService.getAllServices(filters, options);
+    (0, sendResponse_1.default)(res, {
+        message: "Service retrieved successfully!",
         data: result,
     });
 }));
@@ -58,11 +69,28 @@ const myUnitServices = (0, catchAsync_1.default)((req, res) => __awaiter(void 0,
         data: result,
     });
 }));
+const assignUnitService = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield UnitService_service_1.UnitServiceService.assignUnitService(req.body, req.user.id);
+    (0, sendResponse_1.default)(res, {
+        message: "Assigned UnitService successfully!",
+        data: result,
+    });
+}));
+const singleAssignedService = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield UnitService_service_1.UnitServiceService.singleAssignedService(req.params.id);
+    (0, sendResponse_1.default)(res, {
+        message: "Assigned UnitService retrieved successfully!",
+        data: result,
+    });
+}));
 exports.UnitServiceController = {
     createUnitService,
     singleUnitService,
     providerService,
+    getAllServices,
     myService,
     updateProviderService,
-    myUnitServices
+    myUnitServices,
+    assignUnitService,
+    singleAssignedService,
 };

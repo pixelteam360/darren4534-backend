@@ -101,12 +101,13 @@ const assignTenant = async (payload: TAssignTenant, userId: string) => {
   const result = await prisma.$transaction(async (prisma) => {
     const assign = await prisma.assignTenant.create({ data: payload });
 
-    await prisma.unitPayment.createMany({
+    const pay=  await prisma.unitPayment.createMany({
       data: payment,
     });
 
     return assign;
   });
+
 
   return result;
 };
@@ -165,12 +166,12 @@ const unitForm = async (
     petPolicyForm,
     backgroundCheck,
   ] = await Promise.all([
-    fileUploader.uploadToCloudinary(govtIssuedIdFile),
-    fileUploader.uploadToCloudinary(socialSecurityCardFile),
-    fileUploader.uploadToCloudinary(pdfCopyOfLeaseFile),
-    fileUploader.uploadToCloudinary(rentalApplicationFile),
-    fileUploader.uploadToCloudinary(petPolicyFormFile),
-    fileUploader.uploadToCloudinary(backgroundCheckFile),
+    fileUploader.uploadToDigitalOcean(govtIssuedIdFile),
+    fileUploader.uploadToDigitalOcean(socialSecurityCardFile),
+    fileUploader.uploadToDigitalOcean(pdfCopyOfLeaseFile),
+    fileUploader.uploadToDigitalOcean(rentalApplicationFile),
+    fileUploader.uploadToDigitalOcean(petPolicyFormFile),
+    fileUploader.uploadToDigitalOcean(backgroundCheckFile),
   ]);
 
   const result = await prisma.unitForm.create({
@@ -210,6 +211,12 @@ const getMyUnit = async (userId: string) => {
   });
 
   return res;
+};
+
+const deleteUnitForm = async (id: string) => {
+   await prisma.unitForm.delete({ where: { id } });
+
+  return { message: "Tenant removed successfully" };
 };
 
 export const UnitService = {

@@ -5,57 +5,69 @@ const onlineUsers = new Set<string>();
 
 export async function handleMessageList(ws: ExtendedWebSocket) {
   try {
-    // Fetch all rooms where the user is involved
+    const userId = ws.userId;
+
     const rooms = await prisma.room.findMany({
       where: {
-        OR: [{ senderId: ws.userId }, { receiverId: ws.userId }],
+        users: { some: { userId } },
       },
       include: {
-        chat: {
-          orderBy: {
-            createdAt: "desc",
+        users: {
+          select: {
+            user: {
+              select: {
+                id: true,
+                fullName: true,
+                image: true,
+              },
+            },
           },
-          take: 1, // Fetch only the latest message for each room
+        },
+        chat: {
+          orderBy: { createdAt: "desc" },
+          take: 1,
         },
       },
     });
 
-    // Extract the relevant user IDs from the rooms
-    const userIds = rooms.map((room) => {
-      return room.senderId === ws.userId ? room.receiverId : room.senderId;
-    });
+    const userWithLastMessages = rooms
+      .map((room) => {
+        if (room.type === "ONE_TO_ONE") {
+          const otherUser =
+            room.users.find((u) => u.user.id !== userId)?.user || null;
+          return {
+            roomId: room.id,
+            type: room.type,
+            name: otherUser?.fullName || "Unknown",
+            image: otherUser?.image || "",
+            lastMessage: room.chat[0] || null,
+            onlineUsers: onlineUsers.has(otherUser?.id ?? ""),
+          };
+        }
 
-    // Fetch user for the corresponding user IDs
-    const userInfos = await prisma.user.findMany({
-      where: {
-        id: {
-          in: userIds,
-        },
-      },
-      select: {
-        id: true,
-        fullName: true,
-        image: true,
-      },
-    });
+        if (room.type === "GROUP") {
+          return {
+            roomId: room.id,
+            type: room.type,
+            name: room.name || "Unnamed Group",
+            membersCount: room.users.length,
+            lastMessage: room.chat[0] || null,
+          };
+        }
 
-    // Combine user info with their last message
-    const userWithLastMessages = rooms.map((room) => {
-      const otherprofileId =
-        room.senderId === ws.userId ? room.receiverId : room.senderId;
+        return null;
+      })
+      .filter(Boolean)
+      .sort((a: any, b: any) => {
+        const aDate = a.lastMessage?.createdAt
+          ? new Date(a.lastMessage.createdAt).getTime()
+          : 0;
+        const bDate = b.lastMessage?.createdAt
+          ? new Date(b.lastMessage.createdAt).getTime()
+          : 0;
+        return bDate - aDate;
+      });
 
-      const userInfo = userInfos.find(
-        (userInfo) => userInfo.id === otherprofileId
-      );
-
-      return {
-        user: userInfo || null,
-        lastMessage: room.chat[0] || null,
-        onlineUsers: onlineUsers.has(userInfo?.id as string),
-      };
-    });
-
-    // Send the result back to the requesting client
     ws.send(
       JSON.stringify({
         event: "messageList",
