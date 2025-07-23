@@ -27,5 +27,6 @@ router.get("/my", (0, auth_1.default)(client_1.UserRole.TENANT), Unit_controller
 router
     .route("/:id")
     .get((0, auth_1.default)(), Unit_controller_1.UnitController.singleUnits)
-    .put((0, auth_1.default)(client_1.UserRole.LANDLORD), Unit_controller_1.UnitController.updateUnit);
+    .put((0, auth_1.default)(client_1.UserRole.LANDLORD), Unit_controller_1.UnitController.updateUnit)
+    .delete((0, auth_1.default)(client_1.UserRole.LANDLORD), Unit_controller_1.UnitController.deleteUnitForm);
 exports.UnitRoutes = router;

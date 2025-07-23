@@ -94,6 +94,14 @@ const getMyUnit = catchAsync(async (req, res) => {
   });
 });
 
+const deleteUnitForm = catchAsync(async (req, res) => {
+  const result = await UnitService.deleteUnitForm(req.params.id, req.user.id);
+  sendResponse(res, {
+    message: "Tenant removed successfully!",
+    data: result,
+  });
+});
+
 export const UnitController = {
   createUnit,
   singleUnits,
@@ -102,4 +110,5 @@ export const UnitController = {
   varifyUnitCode,
   unitForm,
   getMyUnit,
+  deleteUnitForm,
 };

@@ -101,13 +101,12 @@ const assignTenant = async (payload: TAssignTenant, userId: string) => {
   const result = await prisma.$transaction(async (prisma) => {
     const assign = await prisma.assignTenant.create({ data: payload });
 
-    const pay=  await prisma.unitPayment.createMany({
+    const pay = await prisma.unitPayment.createMany({
       data: payment,
     });
 
     return assign;
   });
-
 
   return result;
 };
@@ -147,7 +146,11 @@ const unitForm = async (
 
   const unit = await prisma.unit.findFirst({
     where: { id: payload.unitId },
-    select: { id: true, UnitForm: true },
+    select: {
+      id: true,
+      UnitForm: true,
+      AssignTenant: { select: { id: true } },
+    },
   });
 
   if (!unit) {
@@ -156,6 +159,13 @@ const unitForm = async (
 
   if (unit?.UnitForm) {
     throw new ApiError(httpStatus.BAD_REQUEST, "This unit is already assigned");
+  }
+
+  if (unit?.AssignTenant?.id) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "Owner did not assigned any tenant yet"
+    );
   }
 
   const [
@@ -213,10 +223,36 @@ const getMyUnit = async (userId: string) => {
   return res;
 };
 
-const deleteUnitForm = async (id: string) => {
-   await prisma.unitForm.delete({ where: { id } });
+const deleteUnitForm = async (id: string, userId: string) => {
+  const unit = await prisma.unit.findFirst({
+    where: { id, building: { userId } },
+    select: {
+      id: true,
+      AssignTenant: { select: { id: true } },
+      UnitForm: { select: { id: true } },
+    },
+  });
 
-  return { message: "Tenant removed successfully" };
+  if (!unit) {
+    throw new ApiError(
+      httpStatus.NOT_FOUND,
+      "You are not the owner of the unit"
+    );
+  }
+
+  if (!unit.AssignTenant?.id || !unit.UnitForm?.id) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Tenant did not assign yet");
+  }
+
+  const res = await prisma.$transaction(async (prisma) => {
+    await prisma.unitForm.delete({ where: { unitId: unit.id } });
+
+    await prisma.assignTenant.delete({ where: { unitId: unit.id } });
+
+    return { message: "Tenant removed successfully" };
+  });
+
+  return res;
 };
 
 export const UnitService = {
@@ -227,4 +263,5 @@ export const UnitService = {
   varifyUnitCode,
   unitForm,
   getMyUnit,
+  deleteUnitForm,
 };

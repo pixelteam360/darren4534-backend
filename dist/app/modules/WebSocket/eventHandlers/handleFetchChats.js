@@ -14,28 +14,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.handleFetchChats = handleFetchChats;
 const prisma_1 = __importDefault(require("../../../../shared/prisma"));
-const onlineUsers = new Set();
 function handleFetchChats(ws, data) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { receiverId } = data;
-        if (!ws.userId) {
-            console.log("User not authenticated");
-            return;
-        }
-        const room = yield prisma_1.default.room.findFirst({
-            where: {
-                OR: [
-                    { senderId: ws.userId, receiverId },
-                    { senderId: receiverId, receiverId: ws.userId },
-                ],
-            },
-        });
-        if (!room) {
-            ws.send(JSON.stringify({ event: "fetchChats", data: [] }));
-            return;
-        }
+        const { roomId } = data;
         const chats = yield prisma_1.default.chat.findMany({
-            where: { roomId: room.id },
+            where: { roomId: roomId },
             orderBy: { createdAt: "asc" },
             select: {
                 id: true,
@@ -51,13 +34,12 @@ function handleFetchChats(ws, data) {
             },
         });
         yield prisma_1.default.chat.updateMany({
-            where: { roomId: room.id, receiverId: ws.userId },
+            where: { roomId: roomId },
             data: { isRead: true },
         });
         ws.send(JSON.stringify({
             event: "fetchChats",
             data: chats,
-            onlineUsers: onlineUsers.has(receiverId),
         }));
     });
 }

@@ -93,7 +93,7 @@ const assignTenant = (payload, userId) => __awaiter(void 0, void 0, void 0, func
     });
     const result = yield prisma_1.default.$transaction((prisma) => __awaiter(void 0, void 0, void 0, function* () {
         const assign = yield prisma.assignTenant.create({ data: payload });
-        yield prisma.unitPayment.createMany({
+        const pay = yield prisma.unitPayment.createMany({
             data: payment,
         });
         return assign;
@@ -109,6 +109,7 @@ const varifyUnitCode = (payload) => __awaiter(void 0, void 0, void 0, function* 
     return result;
 });
 const unitForm = (payload, userId, govtIssuedIdFile, socialSecurityCardFile, pdfCopyOfLeaseFile, rentalApplicationFile, petPolicyFormFile, backgroundCheckFile) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     const myUnit = yield prisma_1.default.unitForm.findFirst({
         where: {
             tenantId: userId,
@@ -119,13 +120,20 @@ const unitForm = (payload, userId, govtIssuedIdFile, socialSecurityCardFile, pdf
     }
     const unit = yield prisma_1.default.unit.findFirst({
         where: { id: payload.unitId },
-        select: { id: true, UnitForm: true },
+        select: {
+            id: true,
+            UnitForm: true,
+            AssignTenant: { select: { id: true } },
+        },
     });
     if (!unit) {
         throw new ApiErrors_1.default(http_status_1.default.BAD_REQUEST, "Unit not found");
     }
     if (unit === null || unit === void 0 ? void 0 : unit.UnitForm) {
         throw new ApiErrors_1.default(http_status_1.default.BAD_REQUEST, "This unit is already assigned");
+    }
+    if ((_a = unit === null || unit === void 0 ? void 0 : unit.AssignTenant) === null || _a === void 0 ? void 0 : _a.id) {
+        throw new ApiErrors_1.default(http_status_1.default.BAD_REQUEST, "Owner did not assigned any tenant yet");
     }
     const [govtIssuedId, socialSecurityCard, pdfCopyOfLease, rentalApplication, petPolicyForm, backgroundCheck,] = yield Promise.all([
         fileUploader_1.fileUploader.uploadToDigitalOcean(govtIssuedIdFile),
@@ -161,6 +169,29 @@ const getMyUnit = (userId) => __awaiter(void 0, void 0, void 0, function* () {
     });
     return res;
 });
+const deleteUnitForm = (id, userId) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b;
+    const unit = yield prisma_1.default.unit.findFirst({
+        where: { id, building: { userId } },
+        select: {
+            id: true,
+            AssignTenant: { select: { id: true } },
+            UnitForm: { select: { id: true } },
+        },
+    });
+    if (!unit) {
+        throw new ApiErrors_1.default(http_status_1.default.NOT_FOUND, "You are not the owner of the unit");
+    }
+    if (!((_a = unit.AssignTenant) === null || _a === void 0 ? void 0 : _a.id) || !((_b = unit.UnitForm) === null || _b === void 0 ? void 0 : _b.id)) {
+        throw new ApiErrors_1.default(http_status_1.default.BAD_REQUEST, "Tenant did not assign yet");
+    }
+    const res = yield prisma_1.default.$transaction((prisma) => __awaiter(void 0, void 0, void 0, function* () {
+        yield prisma.unitForm.delete({ where: { unitId: unit.id } });
+        yield prisma.assignTenant.delete({ where: { unitId: unit.id } });
+        return { message: "Tenant removed successfully" };
+    }));
+    return res;
+});
 exports.UnitService = {
     createUnit,
     singleUnits,
@@ -169,4 +200,5 @@ exports.UnitService = {
     varifyUnitCode,
     unitForm,
     getMyUnit,
+    deleteUnitForm,
 };

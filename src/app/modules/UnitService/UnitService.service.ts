@@ -49,18 +49,37 @@ const singleUnitService = async (id: string) => {
     where: { id: assignedService?.id },
     select: {
       assignDate: true,
+      providerService: {
+        select: {
+          userId: true,
+          name: true,
+          location: true,
+          charge: true,
+          category: true,
+        },
+      },
+      roomId: true,
       unitService: {
         select: {
           title: true,
           reason: true,
+          image: true,
           unit: {
             select: {
               building: {
                 select: {
-                  user: { select: { fullName: true, phoneNumber: true } },
+                  user: {
+                    select: { id: true, fullName: true, phoneNumber: true },
+                  },
                 },
               },
-              UnitForm: { select: { renterName: true, mobileNumber: true } },
+              UnitForm: {
+                select: {
+                  renterName: true,
+                  mobileNumber: true,
+                  tenantId: true,
+                },
+              },
             },
           },
         },
@@ -72,7 +91,30 @@ const singleUnitService = async (id: string) => {
     throw new ApiError(httpStatus.NOT_FOUND, "Data not found");
   }
 
-  return res;
+  const flatData = {
+    assignDate: res.assignDate,
+    roomId: res.roomId,
+    title: res.unitService?.title ?? "",
+    reason: res.unitService?.reason ?? "",
+    image: res.unitService?.image ?? "",
+
+    landlordId: res.unitService?.unit?.building?.user?.id ?? null,
+    landlordName: res.unitService?.unit?.building?.user?.fullName ?? "",
+    landlordPhone: res.unitService?.unit?.building?.user?.phoneNumber ?? "",
+
+    renterName: res.unitService?.unit?.UnitForm?.renterName ?? "",
+    renterMobile: res.unitService?.unit?.UnitForm?.mobileNumber ?? "",
+    tenantId: res.unitService?.unit?.UnitForm?.tenantId ?? null,
+    serviceDetails: {
+      userId: res.providerService?.userId ?? null,
+      name: res.providerService?.name ?? "",
+      location: res.providerService?.location ?? "",
+      charge: res.providerService?.charge ?? "",
+      category: res.providerService?.category ?? "",
+    },
+  };
+
+  return flatData;
 };
 
 const providerService = async (payload: TProviderService, userId: string) => {
@@ -253,16 +295,7 @@ const assignUnitService = async (
   const memberIds = [userId, providerService.user.id, unit.tenant.id];
 
   const result = await prisma.$transaction(async (prisma) => {
-    const assignService = await prisma.assignService.create({
-      data: payload,
-    });
-
-    await prisma.unitService.update({
-      where: { id: payload.unitServiceId },
-      data: { status: "ONGOING" },
-    });
-
-    await prisma.room.create({
+    const room = await prisma.room.create({
       data: {
         name: `${providerService.user.fullName} ${unit.tenant.fullName} ${user?.fullName}`,
         type: "GROUP",
@@ -274,6 +307,19 @@ const assignUnitService = async (
           ],
         },
       },
+
+      select: { id: true },
+    });
+
+    const assignService = await prisma.assignService.create({
+      data: { ...payload, roomId: room.id },
+      select: { id: true },
+    });
+
+    await prisma.unitService.update({
+      where: { id: payload.unitServiceId },
+      data: { status: "ONGOING" },
+      select: { id: true },
     });
 
     return assignService;

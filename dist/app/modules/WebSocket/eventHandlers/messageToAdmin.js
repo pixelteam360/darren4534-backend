@@ -18,28 +18,43 @@ const userSockets = new Map();
 function messageToAdmin(ws, data) {
     return __awaiter(this, void 0, void 0, function* () {
         const { message, images } = data;
-        const receiver = yield prisma_1.default.user.findFirst({
+        const admin = yield prisma_1.default.user.findFirst({
             where: { role: "ADMIN" },
-            select: { id: true, role: true },
+            select: { id: true },
         });
-        if (!receiver) {
-            return ws.send(JSON.stringify({ event: "error", message: "Receiver not found" }));
+        if (!admin) {
+            return ws.send(JSON.stringify({ event: "error", message: "Admin not found" }));
         }
-        const receiverId = receiver.id;
-        if (!ws.userId || !receiverId || !message) {
+        const receiverId = admin.id;
+        if (!ws.userId || !message) {
             return ws.send(JSON.stringify({ event: "error", message: "Invalid message payload" }));
         }
-        let room = yield prisma_1.default.room.findFirst({
+        const existingRooms = yield prisma_1.default.room.findMany({
             where: {
-                OR: [
-                    { senderId: ws.userId, receiverId },
-                    { senderId: receiverId, receiverId: ws.userId },
-                ],
+                type: "ONE_TO_ONE",
+                users: {
+                    every: {
+                        OR: [{ userId: ws.userId }, { userId: receiverId }],
+                    },
+                },
             },
+            include: { users: true },
         });
+        let room = existingRooms === null || existingRooms === void 0 ? void 0 : existingRooms.find((r) => r.users.length === 2);
         if (!room) {
             room = yield prisma_1.default.room.create({
-                data: { senderId: ws.userId, receiverId },
+                data: {
+                    type: "ONE_TO_ONE",
+                    users: {
+                        create: [
+                            { user: { connect: { id: ws.userId } } },
+                            { user: { connect: { id: receiverId } } },
+                        ],
+                    },
+                },
+                include: {
+                    users: true,
+                },
             });
         }
         const chat = yield prisma_1.default.chat.create({
@@ -53,8 +68,8 @@ function messageToAdmin(ws, data) {
         });
         const receiverSocket = userSockets.get(receiverId);
         if (receiverSocket) {
-            receiverSocket.send(JSON.stringify({ event: "message", data: chat }));
+            receiverSocket.send(JSON.stringify({ event: "messageToAdmin", data: chat }));
         }
-        ws.send(JSON.stringify({ event: "message", data: chat }));
+        ws.send(JSON.stringify({ event: "messageToAdmin", data: chat }));
     });
 }

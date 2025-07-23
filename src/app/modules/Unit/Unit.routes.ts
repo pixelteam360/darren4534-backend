@@ -43,6 +43,7 @@ router.get("/my", auth(UserRole.TENANT), UnitController.getMyUnit);
 router
   .route("/:id")
   .get(auth(), UnitController.singleUnits)
-  .put(auth(UserRole.LANDLORD), UnitController.updateUnit);
+  .put(auth(UserRole.LANDLORD), UnitController.updateUnit)
+  .delete(auth(UserRole.LANDLORD), UnitController.deleteUnitForm);
 
 export const UnitRoutes = router;

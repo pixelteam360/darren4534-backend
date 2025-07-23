@@ -18,48 +18,65 @@ const onlineUsers = new Set();
 function handleMessageList(ws) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            // Fetch all rooms where the user is involved
+            const userId = ws.userId;
             const rooms = yield prisma_1.default.room.findMany({
                 where: {
-                    OR: [{ senderId: ws.userId }, { receiverId: ws.userId }],
+                    users: { some: { userId } },
                 },
                 include: {
-                    chat: {
-                        orderBy: {
-                            createdAt: "desc",
+                    users: {
+                        select: {
+                            user: {
+                                select: {
+                                    id: true,
+                                    fullName: true,
+                                    image: true,
+                                },
+                            },
                         },
-                        take: 1, // Fetch only the latest message for each room
+                    },
+                    chat: {
+                        orderBy: { createdAt: "desc" },
+                        take: 1,
                     },
                 },
             });
-            // Extract the relevant user IDs from the rooms
-            const userIds = rooms.map((room) => {
-                return room.senderId === ws.userId ? room.receiverId : room.senderId;
+            const userWithLastMessages = rooms
+                .map((room) => {
+                var _a, _b;
+                if (room.type === "ONE_TO_ONE") {
+                    const otherUser = ((_a = room.users.find((u) => u.user.id !== userId)) === null || _a === void 0 ? void 0 : _a.user) || null;
+                    return {
+                        roomId: room.id,
+                        type: room.type,
+                        name: (otherUser === null || otherUser === void 0 ? void 0 : otherUser.fullName) || "Unknown",
+                        image: (otherUser === null || otherUser === void 0 ? void 0 : otherUser.image) || "",
+                        lastMessage: room.chat[0] || null,
+                        onlineUsers: onlineUsers.has((_b = otherUser === null || otherUser === void 0 ? void 0 : otherUser.id) !== null && _b !== void 0 ? _b : ""),
+                    };
+                }
+                if (room.type === "GROUP") {
+                    return {
+                        roomId: room.id,
+                        type: room.type,
+                        name: room.name || "Unnamed Group",
+                        membersCount: room.users.length,
+                        lastMessage: room.chat[0] || null,
+                    };
+                }
+                return null;
+            })
+                .filter(Boolean)
+                .sort((a, b) => {
+                var _a, _b;
+                const aDate = ((_a = a.lastMessage) === null || _a === void 0 ? void 0 : _a.createdAt)
+                    ? new Date(a.lastMessage.createdAt).getTime()
+                    : 0;
+                const bDate = ((_b = b.lastMessage) === null || _b === void 0 ? void 0 : _b.createdAt)
+                    ? new Date(b.lastMessage.createdAt).getTime()
+                    : 0;
+                return bDate - aDate;
             });
-            // Fetch user for the corresponding user IDs
-            const userInfos = yield prisma_1.default.user.findMany({
-                where: {
-                    id: {
-                        in: userIds,
-                    },
-                },
-                select: {
-                    id: true,
-                    fullName: true,
-                    image: true,
-                },
-            });
-            // Combine user info with their last message
-            const userWithLastMessages = rooms.map((room) => {
-                const otherprofileId = room.senderId === ws.userId ? room.receiverId : room.senderId;
-                const userInfo = userInfos.find((userInfo) => userInfo.id === otherprofileId);
-                return {
-                    user: userInfo || null,
-                    lastMessage: room.chat[0] || null,
-                    onlineUsers: onlineUsers.has(userInfo === null || userInfo === void 0 ? void 0 : userInfo.id),
-                };
-            });
-            // Send the result back to the requesting client
             ws.send(JSON.stringify({
                 event: "messageList",
                 data: userWithLastMessages,

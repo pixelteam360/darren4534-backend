@@ -17,42 +17,62 @@ const prisma_1 = __importDefault(require("../../../../shared/prisma"));
 const userSockets = new Map();
 function handleMessage(ws, data) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { receiverId, message, images } = data;
-        const receiver = yield prisma_1.default.user.findFirst({
-            where: { id: receiverId },
-            select: { id: true, role: true },
-        });
-        if (!receiver) {
-            return ws.send(JSON.stringify({ event: "error", message: "Receiver not found" }));
-        }
-        if (!ws.userId || !receiverId || !message) {
+        const { receiverId, roomId, message, images } = data;
+        if (!ws.userId || !message) {
             return ws.send(JSON.stringify({ event: "error", message: "Invalid message payload" }));
         }
-        let room = yield prisma_1.default.room.findFirst({
-            where: {
-                OR: [
-                    { senderId: ws.userId, receiverId },
-                    { senderId: receiverId, receiverId: ws.userId },
-                ],
-            },
-        });
-        if (!room) {
-            room = yield prisma_1.default.room.create({
-                data: { senderId: ws.userId, receiverId },
+        let room;
+        if (roomId) {
+            room = yield prisma_1.default.room.findUnique({
+                where: { id: roomId },
+                include: { users: { select: { userId: true } } },
             });
+            if (!room) {
+                return ws.send(JSON.stringify({ event: "error", message: "Room not found" }));
+            }
+        }
+        else {
+            const existingRooms = yield prisma_1.default.room.findMany({
+                where: {
+                    type: "ONE_TO_ONE",
+                    users: {
+                        some: { userId: ws.userId },
+                    },
+                },
+                include: { users: true },
+            });
+            room = existingRooms.find((r) => r.users.some((u) => u.userId === receiverId) && r.users.length === 2);
+            if (!room) {
+                room = yield prisma_1.default.room.create({
+                    data: {
+                        type: "ONE_TO_ONE",
+                        users: {
+                            create: [
+                                { user: { connect: { id: ws.userId } } },
+                                { user: { connect: { id: receiverId } } },
+                            ],
+                        },
+                    },
+                    include: { users: { select: { userId: true } } },
+                });
+            }
         }
         const chat = yield prisma_1.default.chat.create({
             data: {
                 senderId: ws.userId,
-                receiverId,
+                receiverId: room.type === "ONE_TO_ONE" ? receiverId : null,
                 roomId: room.id,
                 message,
                 images: images || "",
             },
         });
-        const receiverSocket = userSockets.get(receiverId);
-        if (receiverSocket) {
-            receiverSocket.send(JSON.stringify({ event: "message", data: chat }));
+        for (const member of room.users) {
+            if (member.userId === ws.userId)
+                continue;
+            const receiverSocket = userSockets.get(member.userId);
+            if (receiverSocket) {
+                receiverSocket.send(JSON.stringify({ event: "message", data: chat }));
+            }
         }
         ws.send(JSON.stringify({ event: "message", data: chat }));
     });
