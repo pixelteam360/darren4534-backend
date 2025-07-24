@@ -34,9 +34,36 @@ const adminOverview = catchAsync(async (req, res) => {
   });
 });
 
+const createPrivacy = catchAsync(async (req, res) => {
+  const result = await DashboardService.createPrivacyIntoDb(req.body);
+  sendResponse(res, {
+    message: "Privacy created successfully!",
+    data: result,
+  });
+});
+
+const getPrivacys = catchAsync(async (req, res) => {
+  const result = await DashboardService.getPrivacysFromDb();
+  sendResponse(res, {
+    message: "Privacys retrieved successfully!",
+    data: result,
+  });
+});
+
+const updatePrivacy = catchAsync(async (req, res) => {
+  const result = await DashboardService.updatePrivacy(req.body, req.params.id);
+  sendResponse(res, {
+    message: "Privacy updated successfully!",
+    data: result,
+  });
+});
+
 export const DashboardController = {
   landLordOverview,
   tenantOverview,
   serviceProviderOverview,
-  adminOverview
+  adminOverview,
+  getPrivacys,
+  createPrivacy,
+  updatePrivacy,
 };

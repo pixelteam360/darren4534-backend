@@ -30,6 +30,9 @@ router
     .route("/assign")
     .post((0, auth_1.default)(client_1.UserRole.LANDLORD), (0, validateRequest_1.default)(UnitService_validation_1.UnitServiceValidation.AssignUnitServiceSchema), UnitService_controller_1.UnitServiceController.assignUnitService)
     .get((0, auth_1.default)(client_1.UserRole.SERVICE_PROVIDER), UnitService_controller_1.UnitServiceController.myUnitServices);
-router.route("/:id").get((0, auth_1.default)(), UnitService_controller_1.UnitServiceController.singleUnitService);
+router
+    .route("/:id")
+    .get((0, auth_1.default)(), UnitService_controller_1.UnitServiceController.singleUnitService)
+    .patch((0, auth_1.default)(client_1.UserRole.SERVICE_PROVIDER), UnitService_controller_1.UnitServiceController.markAsCompleted);
 router.get("/assign/:id", (0, auth_1.default)(), UnitService_controller_1.UnitServiceController.singleAssignedService);
 exports.UnitServiceRoutes = router;

@@ -1,4 +1,5 @@
 import { handleAuthenticate } from "./eventHandlers/authenticate";
+import { fetchAdminChats } from "./eventHandlers/fetchAdminChats";
 import { handleFetchChats } from "./eventHandlers/handleFetchChats";
 import { handleMessage } from "./eventHandlers/handleMessage";
 import { handleMessageList } from "./eventHandlers/handleMessageList";
@@ -21,6 +22,9 @@ export function handleConnection(ws: ExtendedWebSocket, wss: WebSocketServer) {
           break;
         case "messageToAdmin":
           await messageToAdmin(ws, parsed);
+          break;
+        case "fetchAdminChats":
+          await fetchAdminChats(ws);
           break;
         case "fetchChats":
           await handleFetchChats(ws, parsed);

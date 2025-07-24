@@ -40,6 +40,7 @@ export async function handleMessageList(ws: ExtendedWebSocket) {
             type: room.type,
             name: otherUser?.fullName || "Unknown",
             image: otherUser?.image || "",
+            membersCount: 2,
             lastMessage: room.chat[0] || null,
             onlineUsers: onlineUsers.has(otherUser?.id ?? ""),
           };
@@ -50,6 +51,7 @@ export async function handleMessageList(ws: ExtendedWebSocket) {
             roomId: room.id,
             type: room.type,
             name: room.name || "Unnamed Group",
+            image: "",
             membersCount: room.users.length,
             lastMessage: room.chat[0] || null,
           };

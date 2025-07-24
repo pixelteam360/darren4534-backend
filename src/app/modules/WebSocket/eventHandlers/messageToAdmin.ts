@@ -25,19 +25,17 @@ export async function messageToAdmin(ws: ExtendedWebSocket, data: any) {
     );
   }
 
-  const existingRooms = await prisma.room.findMany({
+  let room = await prisma.room.findFirst({
     where: {
       type: "ONE_TO_ONE",
-      users: {
-        every: {
-          OR: [{ userId: ws.userId }, { userId: receiverId }],
-        },
-      },
+      AND: [
+        { users: { some: { userId: ws.userId } } },
+        { users: { some: { userId: receiverId } } },
+      ],
     },
     include: { users: true },
   });
 
-  let room = existingRooms?.find((r) => r.users.length === 2);
 
   if (!room) {
     room = await prisma.room.create({

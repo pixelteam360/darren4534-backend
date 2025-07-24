@@ -15,4 +15,11 @@ router
 router.get("/tenant", (0, auth_1.default)(client_1.UserRole.TENANT), Dashboard_controller_1.DashboardController.tenantOverview);
 router.get("/service-provider", (0, auth_1.default)(client_1.UserRole.SERVICE_PROVIDER), Dashboard_controller_1.DashboardController.serviceProviderOverview);
 router.get("/admin", (0, auth_1.default)(client_1.UserRole.ADMIN), Dashboard_controller_1.DashboardController.adminOverview);
+router
+    .route("/privacy")
+    .get((0, auth_1.default)(), Dashboard_controller_1.DashboardController.getPrivacys)
+    .post((0, auth_1.default)(client_1.UserRole.ADMIN), Dashboard_controller_1.DashboardController.createPrivacy);
+router
+    .route("/privacy/:id")
+    .patch((0, auth_1.default)(client_1.UserRole.ADMIN), Dashboard_controller_1.DashboardController.updatePrivacy);
 exports.DashboardRoutes = router;

@@ -51,6 +51,7 @@ function handleMessageList(ws) {
                         type: room.type,
                         name: (otherUser === null || otherUser === void 0 ? void 0 : otherUser.fullName) || "Unknown",
                         image: (otherUser === null || otherUser === void 0 ? void 0 : otherUser.image) || "",
+                        membersCount: 2,
                         lastMessage: room.chat[0] || null,
                         onlineUsers: onlineUsers.has((_b = otherUser === null || otherUser === void 0 ? void 0 : otherUser.id) !== null && _b !== void 0 ? _b : ""),
                     };
@@ -60,6 +61,7 @@ function handleMessageList(ws) {
                         roomId: room.id,
                         type: room.type,
                         name: room.name || "Unnamed Group",
+                        image: "",
                         membersCount: room.users.length,
                         lastMessage: room.chat[0] || null,
                     };

@@ -11,6 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.handleConnection = handleConnection;
 const authenticate_1 = require("./eventHandlers/authenticate");
+const fetchAdminChats_1 = require("./eventHandlers/fetchAdminChats");
 const handleFetchChats_1 = require("./eventHandlers/handleFetchChats");
 const handleMessage_1 = require("./eventHandlers/handleMessage");
 const handleMessageList_1 = require("./eventHandlers/handleMessageList");
@@ -29,6 +30,9 @@ function handleConnection(ws, wss) {
                     break;
                 case "messageToAdmin":
                     yield (0, messageToAdmin_1.messageToAdmin)(ws, parsed);
+                    break;
+                case "fetchAdminChats":
+                    yield (0, fetchAdminChats_1.fetchAdminChats)(ws);
                     break;
                 case "fetchChats":
                     yield (0, handleFetchChats_1.handleFetchChats)(ws, parsed);

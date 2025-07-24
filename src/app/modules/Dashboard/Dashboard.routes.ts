@@ -23,4 +23,13 @@ router.get(
 
 router.get("/admin", auth(UserRole.ADMIN), DashboardController.adminOverview);
 
+router
+  .route("/privacy")
+  .get(auth(), DashboardController.getPrivacys)
+  .post(auth(UserRole.ADMIN), DashboardController.createPrivacy);
+
+router
+  .route("/privacy/:id")
+  .patch(auth(UserRole.ADMIN), DashboardController.updatePrivacy);
+
 export const DashboardRoutes = router;

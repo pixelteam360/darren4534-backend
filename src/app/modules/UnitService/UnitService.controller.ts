@@ -91,6 +91,17 @@ const singleAssignedService = catchAsync(async (req, res) => {
   });
 });
 
+const markAsCompleted = catchAsync(async (req, res) => {
+  const result = await UnitServiceService.markAsCompleted(
+    req.params.id,
+    req.user.id
+  );
+  sendResponse(res, {
+    message: "Service completed",
+    data: result,
+  });
+});
+
 export const UnitServiceController = {
   createUnitService,
   singleUnitService,
@@ -101,4 +112,5 @@ export const UnitServiceController = {
   myUnitServices,
   assignUnitService,
   singleAssignedService,
+  markAsCompleted
 };

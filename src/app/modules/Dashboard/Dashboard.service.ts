@@ -1,3 +1,5 @@
+import httpStatus from "http-status";
+import ApiError from "../../../errors/ApiErrors";
 import prisma from "../../../shared/prisma";
 
 const landLordOverview = async (userId: string) => {
@@ -67,9 +69,44 @@ const adminOverview = async (userId: string) => {
   return { totalBuilding, totalUnit, totalService };
 };
 
+const createPrivacyIntoDb = async (payload: { description: string }) => {
+  const privacy = await prisma.privacyPolicy.findMany();
+
+  if (privacy.length > 0) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "You already have a privacy policy"
+    );
+  }
+
+  const result = await prisma.privacyPolicy.create({
+    data: payload,
+  });
+  return result;
+};
+
+const getPrivacysFromDb = async () => {
+  const Privacy = await prisma.privacyPolicy.findMany();
+  return Privacy;
+};
+
+const updatePrivacy = async (
+  payload: { description: string },
+  PrivacyId: string
+) => {
+  const result = await prisma.privacyPolicy.update({
+    where: { id: PrivacyId },
+    data: payload,
+  });
+  return result;
+};
+
 export const DashboardService = {
   landLordOverview,
   tenantOverview,
   serviceProviderOverview,
-  adminOverview
+  adminOverview,
+  createPrivacyIntoDb,
+  getPrivacysFromDb,
+  updatePrivacy,
 };

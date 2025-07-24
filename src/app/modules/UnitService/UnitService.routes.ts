@@ -50,7 +50,13 @@ router
   )
   .get(auth(UserRole.SERVICE_PROVIDER), UnitServiceController.myUnitServices);
 
-router.route("/:id").get(auth(), UnitServiceController.singleUnitService);
+router
+  .route("/:id")
+  .get(auth(), UnitServiceController.singleUnitService)
+  .patch(
+    auth(UserRole.SERVICE_PROVIDER),
+    UnitServiceController.markAsCompleted
+  );
 
 router.get("/assign/:id", auth(), UnitServiceController.singleAssignedService);
 

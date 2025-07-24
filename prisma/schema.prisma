@@ -207,6 +207,15 @@ model RoomUser {
   @@map("RoomUsers")
 }
 
+model PrivacyPolicy {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  description String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("Privacy-Policy")
+}
+
 enum UserRole {
   ADMIN
   LANDLORD

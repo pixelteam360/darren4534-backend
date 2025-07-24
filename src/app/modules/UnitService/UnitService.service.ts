@@ -1,5 +1,5 @@
 import prisma from "../../../shared/prisma";
-import { Prisma, ProviderService, UnitService } from "@prisma/client";
+import { Prisma, ProviderService } from "@prisma/client";
 import ApiError from "../../../errors/ApiErrors";
 import httpStatus from "http-status";
 import {
@@ -40,13 +40,22 @@ const createUnitService = async (
 };
 
 const singleUnitService = async (id: string) => {
-  const assignedService = await prisma.assignService.findFirst({
-    where: { unitServiceId: id },
-    select: { id: true },
+  const unitService = await prisma.unitService.findFirst({
+    where: { id },
+    include: { AssignService: true },
   });
 
+  if (!unitService) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Unit Service not found");
+  }
+  console.log(unitService);
+
+  if (!unitService.AssignService) {
+    return unitService;
+  }
+
   const res = await prisma.assignService.findFirst({
-    where: { id: assignedService?.id },
+    where: { id: unitService.AssignService.id },
     select: {
       assignDate: true,
       providerService: {
@@ -354,6 +363,33 @@ const singleAssignedService = async (id: string) => {
   return res;
 };
 
+const markAsCompleted = async (serviceId: string, userId: string) => {
+  const service = await prisma.assignService.findFirst({
+    where: { id: serviceId, providerService: { userId } },
+    select: { id: true, unitServiceId: true },
+  });
+
+  if (!service) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Your Assigned Service not found");
+  }
+
+  const res = await prisma.$transaction(async (prisma) => {
+    await prisma.assignService.update({
+      where: { id: service.id },
+      data: { status: "SOLVED" },
+    });
+
+    await prisma.unitService.update({
+      where: { id: service.unitServiceId },
+      data: { status: "SOLVED" },
+    });
+
+    return { message: "Service completed" };
+  });
+
+  return res;
+};
+
 export const UnitServiceService = {
   createUnitService,
   singleUnitService,
@@ -364,4 +400,5 @@ export const UnitServiceService = {
   myUnitServices,
   assignUnitService,
   singleAssignedService,
+  markAsCompleted
 };

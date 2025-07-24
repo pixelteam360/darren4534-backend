@@ -83,6 +83,13 @@ const singleAssignedService = (0, catchAsync_1.default)((req, res) => __awaiter(
         data: result,
     });
 }));
+const markAsCompleted = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield UnitService_service_1.UnitServiceService.markAsCompleted(req.params.id, req.user.id);
+    (0, sendResponse_1.default)(res, {
+        message: "Service completed",
+        data: result,
+    });
+}));
 exports.UnitServiceController = {
     createUnitService,
     singleUnitService,
@@ -93,4 +100,5 @@ exports.UnitServiceController = {
     myUnitServices,
     assignUnitService,
     singleAssignedService,
+    markAsCompleted
 };

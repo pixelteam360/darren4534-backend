@@ -49,12 +49,19 @@ const createUnitService = (payload, imageFile, userId) => __awaiter(void 0, void
 });
 const singleUnitService = (id) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _0, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18;
-    const assignedService = yield prisma_1.default.assignService.findFirst({
-        where: { unitServiceId: id },
-        select: { id: true },
+    const unitService = yield prisma_1.default.unitService.findFirst({
+        where: { id },
+        include: { AssignService: true },
     });
+    if (!unitService) {
+        throw new ApiErrors_1.default(http_status_1.default.NOT_FOUND, "Unit Service not found");
+    }
+    console.log(unitService);
+    if (!unitService.AssignService) {
+        return unitService;
+    }
     const res = yield prisma_1.default.assignService.findFirst({
-        where: { id: assignedService === null || assignedService === void 0 ? void 0 : assignedService.id },
+        where: { id: unitService.AssignService.id },
         select: {
             assignDate: true,
             providerService: {
@@ -301,6 +308,27 @@ const singleAssignedService = (id) => __awaiter(void 0, void 0, void 0, function
     });
     return res;
 });
+const markAsCompleted = (serviceId, userId) => __awaiter(void 0, void 0, void 0, function* () {
+    const service = yield prisma_1.default.assignService.findFirst({
+        where: { id: serviceId, providerService: { userId } },
+        select: { id: true, unitServiceId: true },
+    });
+    if (!service) {
+        throw new ApiErrors_1.default(http_status_1.default.NOT_FOUND, "Your Assigned Service not found");
+    }
+    const res = yield prisma_1.default.$transaction((prisma) => __awaiter(void 0, void 0, void 0, function* () {
+        yield prisma.assignService.update({
+            where: { id: service.id },
+            data: { status: "SOLVED" },
+        });
+        yield prisma.unitService.update({
+            where: { id: service.unitServiceId },
+            data: { status: "SOLVED" },
+        });
+        return { message: "Service completed" };
+    }));
+    return res;
+});
 exports.UnitServiceService = {
     createUnitService,
     singleUnitService,
@@ -311,4 +339,5 @@ exports.UnitServiceService = {
     myUnitServices,
     assignUnitService,
     singleAssignedService,
+    markAsCompleted
 };

@@ -13,6 +13,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DashboardService = void 0;
+const http_status_1 = __importDefault(require("http-status"));
+const ApiErrors_1 = __importDefault(require("../../../errors/ApiErrors"));
 const prisma_1 = __importDefault(require("../../../shared/prisma"));
 const landLordOverview = (userId) => __awaiter(void 0, void 0, void 0, function* () {
     const totalBuilding = yield prisma_1.default.building.count({
@@ -68,9 +70,33 @@ const adminOverview = (userId) => __awaiter(void 0, void 0, void 0, function* ()
     const totalService = yield prisma_1.default.unitService.count();
     return { totalBuilding, totalUnit, totalService };
 });
+const createPrivacyIntoDb = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+    const privacy = yield prisma_1.default.privacyPolicy.findMany();
+    if (privacy.length > 0) {
+        throw new ApiErrors_1.default(http_status_1.default.BAD_REQUEST, "You already have a privacy policy");
+    }
+    const result = yield prisma_1.default.privacyPolicy.create({
+        data: payload,
+    });
+    return result;
+});
+const getPrivacysFromDb = () => __awaiter(void 0, void 0, void 0, function* () {
+    const Privacy = yield prisma_1.default.privacyPolicy.findMany();
+    return Privacy;
+});
+const updatePrivacy = (payload, PrivacyId) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield prisma_1.default.privacyPolicy.update({
+        where: { id: PrivacyId },
+        data: payload,
+    });
+    return result;
+});
 exports.DashboardService = {
     landLordOverview,
     tenantOverview,
     serviceProviderOverview,
-    adminOverview
+    adminOverview,
+    createPrivacyIntoDb,
+    getPrivacysFromDb,
+    updatePrivacy,
 };

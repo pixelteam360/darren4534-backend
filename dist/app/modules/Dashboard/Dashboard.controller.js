@@ -44,9 +44,33 @@ const adminOverview = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, 
         data: result,
     });
 }));
+const createPrivacy = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield Dashboard_service_1.DashboardService.createPrivacyIntoDb(req.body);
+    (0, sendResponse_1.default)(res, {
+        message: "Privacy created successfully!",
+        data: result,
+    });
+}));
+const getPrivacys = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield Dashboard_service_1.DashboardService.getPrivacysFromDb();
+    (0, sendResponse_1.default)(res, {
+        message: "Privacys retrieved successfully!",
+        data: result,
+    });
+}));
+const updatePrivacy = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield Dashboard_service_1.DashboardService.updatePrivacy(req.body, req.params.id);
+    (0, sendResponse_1.default)(res, {
+        message: "Privacy updated successfully!",
+        data: result,
+    });
+}));
 exports.DashboardController = {
     landLordOverview,
     tenantOverview,
     serviceProviderOverview,
-    adminOverview
+    adminOverview,
+    getPrivacys,
+    createPrivacy,
+    updatePrivacy,
 };
