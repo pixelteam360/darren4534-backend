@@ -4,6 +4,24 @@ import { ExtendedWebSocket } from "../types";
 export async function handleFetchChats(ws: ExtendedWebSocket, data: any) {
   const { roomId } = data;
 
+  if (!ws.userId) {
+    return ws.send(
+      JSON.stringify({
+        event: "error",
+        message: "Unauthorize access",
+      })
+    );
+  }
+
+  if (!roomId) {
+    return ws.send(
+      JSON.stringify({
+        event: "error",
+        message: "Room Id not found",
+      })
+    );
+  }
+
   const chats = await prisma.chat.findMany({
     where: { roomId: roomId },
     orderBy: { createdAt: "asc" },

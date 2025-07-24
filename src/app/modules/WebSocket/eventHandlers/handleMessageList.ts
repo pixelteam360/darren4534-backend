@@ -7,6 +7,15 @@ export async function handleMessageList(ws: ExtendedWebSocket) {
   try {
     const userId = ws.userId;
 
+    if (!ws.userId) {
+      return ws.send(
+        JSON.stringify({
+          event: "error",
+          message: "Unauthorize access",
+        })
+      );
+    }
+
     const rooms = await prisma.room.findMany({
       where: {
         users: { some: { userId } },

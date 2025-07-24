@@ -292,6 +292,7 @@ const singleAssignedService = (id) => __awaiter(void 0, void 0, void 0, function
                 select: {
                     title: true,
                     reason: true,
+                    image: true,
                     unit: {
                         select: {
                             building: {
@@ -339,5 +340,5 @@ exports.UnitServiceService = {
     myUnitServices,
     assignUnitService,
     singleAssignedService,
-    markAsCompleted
+    markAsCompleted,
 };

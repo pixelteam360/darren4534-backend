@@ -306,7 +306,7 @@ const assignUnitService = async (
   const result = await prisma.$transaction(async (prisma) => {
     const room = await prisma.room.create({
       data: {
-        name: `${providerService.user.fullName} ${unit.tenant.fullName} ${user?.fullName}`,
+        name: `${providerService.user.fullName}, ${unit.tenant.fullName}, ${user?.fullName}`,
         type: "GROUP",
         users: {
           create: [
@@ -346,6 +346,7 @@ const singleAssignedService = async (id: string) => {
         select: {
           title: true,
           reason: true,
+          image: true,
           unit: {
             select: {
               building: {
@@ -400,5 +401,5 @@ export const UnitServiceService = {
   myUnitServices,
   assignUnitService,
   singleAssignedService,
-  markAsCompleted
+  markAsCompleted,
 };
