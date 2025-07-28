@@ -101,6 +101,8 @@ const updatePrivacy = async (
   return result;
 };
 
+
+
 export const DashboardService = {
   landLordOverview,
   tenantOverview,

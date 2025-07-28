@@ -5,6 +5,7 @@ import { BuildingRoutes } from "../modules/Building/Building.routes";
 import { UnitRoutes } from "../modules/Unit/Unit.routes";
 import { UnitServiceRoutes } from "../modules/UnitService/UnitService.routes";
 import { DashboardRoutes } from "../modules/Dashboard/Dashboard.routes";
+import { StripRoutes } from "../modules/Strip/Strip.routes";
 
 const router = express.Router();
 
@@ -32,6 +33,10 @@ const moduleRoutes = [
   {
     path: "/dashboard",
     route: DashboardRoutes,
+  },
+  {
+    path: "/stripe",
+    route: StripRoutes,
   },
 ];
 

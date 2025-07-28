@@ -19,6 +19,12 @@ function handleMessageList(ws) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const userId = ws.userId;
+            if (!ws.userId) {
+                return ws.send(JSON.stringify({
+                    event: "error",
+                    message: "Unauthorize access",
+                }));
+            }
             const rooms = yield prisma_1.default.room.findMany({
                 where: {
                     users: { some: { userId } },

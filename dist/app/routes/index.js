@@ -10,6 +10,7 @@ const Building_routes_1 = require("../modules/Building/Building.routes");
 const Unit_routes_1 = require("../modules/Unit/Unit.routes");
 const UnitService_routes_1 = require("../modules/UnitService/UnitService.routes");
 const Dashboard_routes_1 = require("../modules/Dashboard/Dashboard.routes");
+const Strip_routes_1 = require("../modules/Strip/Strip.routes");
 const router = express_1.default.Router();
 const moduleRoutes = [
     {
@@ -35,6 +36,10 @@ const moduleRoutes = [
     {
         path: "/dashboard",
         route: Dashboard_routes_1.DashboardRoutes,
+    },
+    {
+        path: "/stripe",
+        route: Strip_routes_1.StripRoutes,
     },
 ];
 moduleRoutes.forEach((route) => router.use(route.path, route.route));

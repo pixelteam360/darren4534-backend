@@ -258,7 +258,7 @@ const assignUnitService = (payload, userId) => __awaiter(void 0, void 0, void 0,
     const result = yield prisma_1.default.$transaction((prisma) => __awaiter(void 0, void 0, void 0, function* () {
         const room = yield prisma.room.create({
             data: {
-                name: `${providerService.user.fullName} ${unit.tenant.fullName} ${user === null || user === void 0 ? void 0 : user.fullName}`,
+                name: `${providerService.user.fullName}, ${unit.tenant.fullName}, ${user === null || user === void 0 ? void 0 : user.fullName}`,
                 type: "GROUP",
                 users: {
                     create: [

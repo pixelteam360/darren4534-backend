@@ -16,6 +16,7 @@ model User {
   location         String?          @default("")
   phoneNumber      String?          @default("")
   about            String?          @default("")
+  stripeAccountId  String?          @default("")
   fcmToken         String?          @default("")
   varifiedEmail    Boolean          @default(false)
   isDeleted        Boolean          @default(false)

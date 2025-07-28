@@ -17,6 +17,18 @@ const prisma_1 = __importDefault(require("../../../../shared/prisma"));
 function handleFetchChats(ws, data) {
     return __awaiter(this, void 0, void 0, function* () {
         const { roomId } = data;
+        if (!ws.userId) {
+            return ws.send(JSON.stringify({
+                event: "error",
+                message: "Unauthorize access",
+            }));
+        }
+        if (!roomId) {
+            return ws.send(JSON.stringify({
+                event: "error",
+                message: "Room Id not found",
+            }));
+        }
         const chats = yield prisma_1.default.chat.findMany({
             where: { roomId: roomId },
             orderBy: { createdAt: "asc" },

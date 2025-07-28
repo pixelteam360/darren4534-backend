@@ -74,10 +74,10 @@ const loginUser = (payload) => __awaiter(void 0, void 0, void 0, function* () {
 <div style="font-family: Arial, sans-serif; color: #333; padding: 30px; background: linear-gradient(135deg, #6c63ff, #3f51b5); border-radius: 8px;">
     <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 8px;">
         <h2 style="color: #ffffff; font-size: 28px; text-align: center; margin-bottom: 20px;">
-            <span style="color: #ffeb3b;">Email varification OTP</span>
+            <span style="color: #ffeb3b;">Email verification OTP</span>
         </h2>
         <p style="font-size: 16px; color: #333; line-height: 1.5; text-align: center;">
-            Your email varification OTP code is below.
+            Your email verification OTP code is below.
         </p>
         <p style="font-size: 32px; font-weight: bold; color: #ff4081; text-align: center; margin: 20px 0;">
             ${otp}
@@ -99,7 +99,7 @@ const loginUser = (payload) => __awaiter(void 0, void 0, void 0, function* () {
         </div>
     </div>
 </div> `;
-        yield (0, emailSender_1.emailSender)(userData.email, html, "Email varification OTP");
+        yield (0, emailSender_1.emailSender)(userData.email, html, "Email verification OTP");
         yield prisma_1.default.user.update({
             where: { id: userData.id },
             data: {
