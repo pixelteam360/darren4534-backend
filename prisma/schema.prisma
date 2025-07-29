@@ -32,6 +32,8 @@ model User {
   UnitService      UnitService[]
   ProviderService  ProviderService?
   RoomUser         RoomUser[]
+  senderPayment    Payment[]        @relation("PaymentSender")
+  receiverPayment  Payment[]        @relation("PaymentReceiver")
 
   @@map("Users")
 }
@@ -162,8 +164,26 @@ model UnitPayment {
   updatedAt DateTime      @updatedAt
   unitId    String        @db.ObjectId()
   unit      Unit?         @relation(fields: [unitId], references: [id])
+  Payment   Payment?
 
   @@map("Unit-Payment")
+}
+
+model Payment {
+  id              String      @id @default(auto()) @map("_id") @db.ObjectId
+  amount          Float
+  paymentIntentId String
+  paymentType     paymentType
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  sender          User        @relation("PaymentSender", fields: [senderId], references: [id])
+  senderId        String      @db.ObjectId
+  receiver        User        @relation("PaymentReceiver", fields: [receiverId], references: [id])
+  receiverId      String      @db.ObjectId
+  unitPayment     UnitPayment @relation(fields: [unitPaymentId], references: [id])
+  unitPaymentId   String      @unique @db.ObjectId
+
+  @@map("Payments")
 }
 
 model Room {
@@ -238,4 +258,9 @@ enum serviceStatus {
 enum RoomType {
   ONE_TO_ONE
   GROUP
+}
+
+enum paymentType {
+  SERVICE
+  RENT
 }

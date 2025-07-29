@@ -2,6 +2,7 @@ import httpStatus from "http-status";
 import ApiError from "../../../errors/ApiErrors";
 import prisma from "../../../shared/prisma";
 import { Request, Response } from "express";
+import { TPayProvider } from "./Strip.interface";
 
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
@@ -61,48 +62,76 @@ const successStatus = async () => {
   };
 };
 
-const paymentByStripe = async (payload: any, userId: string) => {
-  const user = await prisma.user.findFirst({
-    where: { id: userId },
+const payProvider = async (payload: TPayProvider, userId: string) => {
+  const unitPay = await prisma.unitPayment.findFirst({
+    where: { id: payload.unitPaymentId },
+    select: { id: true, status: true },
+  });
+
+  if (!unitPay) {
+    throw new ApiError(httpStatus.NOT_FOUND, "unit Pay not found");
+  }
+
+  if (unitPay.status === "PAID") {
+    throw new ApiError(httpStatus.NOT_FOUND, "unit Payment already completed");
+  }
+
+  const receiver = await prisma.user.findFirst({
+    where: { id: payload.receiverId },
 
     select: { id: true, stripeAccountId: true },
   });
 
-  if (!user?.stripeAccountId) {
+  if (!receiver?.stripeAccountId) {
     throw new ApiError(
-      httpStatus.NOT_FOUND,
-      "User did not connected her stripe account"
+      httpStatus.BAD_REQUEST,
+      "Receiver not connected to Stripe"
     );
   }
 
-  const session = await stripe.checkout.sessions.create({
-    payment_method_types: ["card"],
-    line_items: [
-      {
-        price_data: {
-          currency: "usd",
-          unit_amount: 10000,
-          product_data: {
-            name: "Consultation Service",
-          },
-        },
-        quantity: 1,
-      },
-    ],
-    mode: "payment",
-    success_url: "https://yourapp.com/success",
-    cancel_url: "https://yourapp.com/cancel",
-    payment_intent_data: {
-      // application_fee_amount: 1000, // Optional: take platform fee ($10)
+  try {
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: payload.amount,
+      currency: "usd",
+      payment_method: payload.paymentMethodId,
+      confirm: true,
       transfer_data: {
-        destination: user.stripeAccountId, // Payment goes here
+        destination: receiver.stripeAccountId,
       },
-    },
-  });
+    });
+
+    await prisma.unitPayment.update({
+      where: { id: unitPay.id },
+      data: { status: "PAID" },
+    });
+
+    await prisma.payment.create({
+      data: {
+        amount: payload.amount,
+        paymentIntentId: paymentIntent.id,
+        paymentType: payload.paymentType,
+        senderId: userId,
+        receiverId: payload.receiverId,
+        unitPaymentId: payload.unitPaymentId,
+      },
+    });
+
+    return {
+      success: true,
+      message: "Payment successful",
+      paymentId: paymentIntent.id,
+    };
+  } catch (error: any) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      error?.message || "Payment failed"
+    );
+  }
 };
 
 export const StripService = {
   stripeAuth,
   stripeCallback,
   successStatus,
+  payProvider
 };

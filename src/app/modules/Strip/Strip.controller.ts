@@ -18,8 +18,16 @@ const successStatus = catchAsync(async (req, res) => {
   });
 });
 
+const payProvider = catchAsync(async (req, res) => {
+  const result = await StripService.payProvider(req.body, req.user.id);
+  sendResponse(res, {
+    message: "Payment successfully!",
+    data: result,
+  });
+});
 
 export const StripController = {
   stripeAuth,
-  successStatus
+  successStatus,
+  payProvider
 };

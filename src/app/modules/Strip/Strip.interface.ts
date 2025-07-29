@@ -1,12 +1,9 @@
+import { paymentType } from "@prisma/client";
 
-export type TStrip = {
-  id: string;
-  name: string;
-  location: string;
-  TotalUnit: number;
-  createdAt: Date;
-  updatedAt: Date;
+export type TPayProvider = {
+  receiverId: string;
+  paymentMethodId: string;
+  amount: number;
+  unitPaymentId: string;
+  paymentType: paymentType;
 };
-
-
-
