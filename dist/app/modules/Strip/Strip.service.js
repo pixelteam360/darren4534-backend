@@ -12,7 +12,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.StripService = exports.stripeCallback = void 0;
+exports.StripService = void 0;
+const http_status_1 = __importDefault(require("http-status"));
+const ApiErrors_1 = __importDefault(require("../../../errors/ApiErrors"));
 const prisma_1 = __importDefault(require("../../../shared/prisma"));
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const stripeAuth = (userId) => __awaiter(void 0, void 0, void 0, function* () {
@@ -52,12 +54,70 @@ const stripeCallback = (req, res) => __awaiter(void 0, void 0, void 0, function*
         res.redirect("/success"); // Or send JSON: res.json({ success: true });
     }
     catch (err) {
-        console.error(err);
         res.status(500).send("Stripe OAuth token exchange failed");
     }
 });
-exports.stripeCallback = stripeCallback;
+const successStatus = () => __awaiter(void 0, void 0, void 0, function* () {
+    return {
+        status: "success",
+        message: "You account have successfully connected",
+    };
+});
+const payProvider = (payload, userId) => __awaiter(void 0, void 0, void 0, function* () {
+    const unitPay = yield prisma_1.default.unitPayment.findFirst({
+        where: { id: payload.unitPaymentId },
+        select: { id: true, status: true },
+    });
+    if (!unitPay) {
+        throw new ApiErrors_1.default(http_status_1.default.NOT_FOUND, "unit Pay not found");
+    }
+    if (unitPay.status === "PAID") {
+        throw new ApiErrors_1.default(http_status_1.default.NOT_FOUND, "unit Payment already completed");
+    }
+    const receiver = yield prisma_1.default.user.findFirst({
+        where: { id: payload.receiverId },
+        select: { id: true, stripeAccountId: true },
+    });
+    if (!(receiver === null || receiver === void 0 ? void 0 : receiver.stripeAccountId)) {
+        throw new ApiErrors_1.default(http_status_1.default.BAD_REQUEST, "Receiver not connected to Stripe");
+    }
+    try {
+        const paymentIntent = yield stripe.paymentIntents.create({
+            amount: payload.amount,
+            currency: "usd",
+            payment_method: payload.paymentMethodId,
+            confirm: true,
+            transfer_data: {
+                destination: receiver.stripeAccountId,
+            },
+        });
+        yield prisma_1.default.unitPayment.update({
+            where: { id: unitPay.id },
+            data: { status: "PAID" },
+        });
+        yield prisma_1.default.payment.create({
+            data: {
+                amount: payload.amount,
+                paymentIntentId: paymentIntent.id,
+                paymentType: payload.paymentType,
+                senderId: userId,
+                receiverId: payload.receiverId,
+                unitPaymentId: payload.unitPaymentId,
+            },
+        });
+        return {
+            success: true,
+            message: "Payment successful",
+            paymentId: paymentIntent.id,
+        };
+    }
+    catch (error) {
+        throw new ApiErrors_1.default(http_status_1.default.BAD_REQUEST, (error === null || error === void 0 ? void 0 : error.message) || "Payment failed");
+    }
+});
 exports.StripService = {
     stripeAuth,
-    stripeCallback: exports.stripeCallback,
+    stripeCallback,
+    successStatus,
+    payProvider,
 };

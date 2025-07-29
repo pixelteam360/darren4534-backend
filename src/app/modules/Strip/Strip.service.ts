@@ -133,5 +133,5 @@ export const StripService = {
   stripeAuth,
   stripeCallback,
   successStatus,
-  payProvider
+  payProvider,
 };

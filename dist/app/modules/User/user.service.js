@@ -195,6 +195,7 @@ const getMyProfile = (userEmail) => __awaiter(void 0, void 0, void 0, function* 
             location: true,
             phoneNumber: true,
             about: true,
+            stripeAccountId: true,
             createdAt: true,
             updatedAt: true,
         },

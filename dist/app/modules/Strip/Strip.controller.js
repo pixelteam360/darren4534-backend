@@ -23,6 +23,22 @@ const stripeAuth = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, voi
         data: result,
     });
 }));
+const successStatus = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield Strip_service_1.StripService.successStatus();
+    (0, sendResponse_1.default)(res, {
+        message: "Strip auth successfully!",
+        data: result,
+    });
+}));
+const payProvider = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield Strip_service_1.StripService.payProvider(req.body, req.user.id);
+    (0, sendResponse_1.default)(res, {
+        message: "Payment successfully!",
+        data: result,
+    });
+}));
 exports.StripController = {
     stripeAuth,
+    successStatus,
+    payProvider
 };

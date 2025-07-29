@@ -176,6 +176,7 @@ const getMyProfile = async (userEmail: string) => {
       location: true,
       phoneNumber: true,
       about: true,
+      stripeAccountId: true,
       createdAt: true,
       updatedAt: true,
     },
