@@ -50,9 +50,17 @@ const updateProfile = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, 
         data: result,
     });
 }));
+const blockUser = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield user_service_1.userService.blockUser(req.params.id);
+    (0, sendResponse_1.default)(res, {
+        message: "User is blocked successfully",
+        data: result,
+    });
+}));
 exports.userController = {
     createUser,
     getUsers,
     getMyProfile,
     updateProfile,
+    blockUser,
 };

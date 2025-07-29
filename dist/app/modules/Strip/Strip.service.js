@@ -87,6 +87,10 @@ const payProvider = (payload, userId) => __awaiter(void 0, void 0, void 0, funct
             currency: "usd",
             payment_method: payload.paymentMethodId,
             confirm: true,
+            automatic_payment_methods: {
+                enabled: true,
+                allow_redirects: "never",
+            },
             transfer_data: {
                 destination: receiver.stripeAccountId,
             },

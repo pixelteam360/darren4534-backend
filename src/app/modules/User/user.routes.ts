@@ -30,4 +30,5 @@ router
     userController.updateProfile
   );
 
+router.patch("/:id", auth(UserRole.ADMIN), userController.blockUser);
 export const UserRoutes = router;

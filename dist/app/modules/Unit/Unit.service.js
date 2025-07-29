@@ -44,6 +44,7 @@ const singleUnits = (id) => __awaiter(void 0, void 0, void 0, function* () {
             name: true,
             floor: true,
             code: true,
+            building: { select: { userId: true } },
             AssignTenant: { select: { name: true, rentAmount: true } },
             UnitService: {
                 select: { id: true, title: true, createdAt: true, status: true },

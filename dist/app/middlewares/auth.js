@@ -30,9 +30,13 @@ const auth = (...roles) => {
                 where: {
                     id: id,
                 },
+                select: { id: true, isDeleted: true },
             });
             if (!user) {
                 throw new ApiErrors_1.default(http_status_1.default.NOT_FOUND, "User not found!");
+            }
+            if (user.isDeleted === true) {
+                throw new ApiErrors_1.default(http_status_1.default.BAD_REQUEST, "User is blocked");
             }
             req.user = verifiedUser;
             if (roles.length && !roles.includes(verifiedUser.role)) {

@@ -56,6 +56,7 @@ const config_1 = __importDefault(require("../../../config"));
 const fileUploader_1 = require("../../../helpars/fileUploader");
 const emailSender_1 = require("../../../shared/emailSender");
 const crypto_1 = __importDefault(require("crypto"));
+const http_status_1 = __importDefault(require("http-status"));
 const createUserIntoDb = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     const existingUser = yield prisma_1.default.user.findFirst({
         where: {
@@ -166,8 +167,24 @@ const getUsersFromDb = (params, options) => __awaiter(void 0, void 0, void 0, fu
             fullName: true,
             email: true,
             role: true,
+            image: true,
+            phoneNumber: true,
+            location: true,
+            isDeleted: true,
             createdAt: true,
             updatedAt: true,
+            UnitForm: {
+                select: {
+                    unit: {
+                        select: {
+                            building: { select: { user: { select: { fullName: true } } } },
+                            AssignTenant: { select: { updatedAt: true } },
+                        },
+                    },
+                },
+            },
+            ProviderService: { select: { category: true, createdAt: true } },
+            _count: { select: { Building: true } },
         },
     });
     const total = yield prisma_1.default.user.count({
@@ -216,9 +233,24 @@ const updateProfile = (payload, imageFile, userId) => __awaiter(void 0, void 0, 
     }));
     return result;
 });
+const blockUser = (userId) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = yield prisma_1.default.user.findFirst({
+        where: { id: userId },
+        select: { id: true, isDeleted: true },
+    });
+    if (!user) {
+        throw new ApiErrors_1.default(http_status_1.default.NOT_FOUND, "User not found");
+    }
+    yield prisma_1.default.user.update({
+        where: { id: user.id },
+        data: { isDeleted: !user.isDeleted },
+    });
+    return { message: "User is blocked successfully" };
+});
 exports.userService = {
     createUserIntoDb,
     getUsersFromDb,
     getMyProfile,
     updateProfile,
+    blockUser,
 };

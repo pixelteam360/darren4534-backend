@@ -9,6 +9,7 @@ const validateRequest_1 = __importDefault(require("../../middlewares/validateReq
 const user_validation_1 = require("./user.validation");
 const user_controller_1 = require("./user.controller");
 const auth_1 = __importDefault(require("../../middlewares/auth"));
+const client_1 = require("@prisma/client");
 const fileUploader_1 = require("../../../helpars/fileUploader");
 const router = express_1.default.Router();
 router
@@ -22,4 +23,5 @@ router
     req.body = JSON.parse(req.body.data);
     next();
 }, (0, validateRequest_1.default)(user_validation_1.UserValidation.userUpdateSchema), user_controller_1.userController.updateProfile);
+router.patch("/:id", (0, auth_1.default)(client_1.UserRole.ADMIN), user_controller_1.userController.blockUser);
 exports.UserRoutes = router;

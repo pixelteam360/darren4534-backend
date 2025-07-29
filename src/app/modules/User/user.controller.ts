@@ -40,9 +40,18 @@ const updateProfile = catchAsync(async (req, res) => {
   });
 });
 
+const blockUser = catchAsync(async (req, res) => {
+  const result = await userService.blockUser(req.params.id);
+  sendResponse(res, {
+    message: "User is blocked successfully",
+    data: result,
+  });
+});
+
 export const userController = {
   createUser,
   getUsers,
   getMyProfile,
   updateProfile,
+  blockUser,
 };

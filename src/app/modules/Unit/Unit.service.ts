@@ -40,6 +40,7 @@ const singleUnits = async (id: string) => {
       name: true,
       floor: true,
       code: true,
+      building: {select: {userId: true}},
       AssignTenant: { select: { name: true, rentAmount: true } },
       UnitService: {
         select: { id: true, title: true, createdAt: true, status: true },
