@@ -40,7 +40,7 @@ const singleUnits = async (id: string) => {
       name: true,
       floor: true,
       code: true,
-      building: {select: {userId: true}},
+      building: { select: { userId: true } },
       AssignTenant: { select: { name: true, rentAmount: true } },
       UnitService: {
         select: { id: true, title: true, createdAt: true, status: true },
@@ -162,7 +162,7 @@ const unitForm = async (
     throw new ApiError(httpStatus.BAD_REQUEST, "This unit is already assigned");
   }
 
-  if (unit?.AssignTenant?.id) {
+  if (unit?.AssignTenant === null) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
       "Owner did not assigned any tenant yet"

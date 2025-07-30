@@ -110,7 +110,6 @@ const varifyUnitCode = (payload) => __awaiter(void 0, void 0, void 0, function* 
     return result;
 });
 const unitForm = (payload, userId, govtIssuedIdFile, socialSecurityCardFile, pdfCopyOfLeaseFile, rentalApplicationFile, petPolicyFormFile, backgroundCheckFile) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
     const myUnit = yield prisma_1.default.unitForm.findFirst({
         where: {
             tenantId: userId,
@@ -133,7 +132,7 @@ const unitForm = (payload, userId, govtIssuedIdFile, socialSecurityCardFile, pdf
     if (unit === null || unit === void 0 ? void 0 : unit.UnitForm) {
         throw new ApiErrors_1.default(http_status_1.default.BAD_REQUEST, "This unit is already assigned");
     }
-    if ((_a = unit === null || unit === void 0 ? void 0 : unit.AssignTenant) === null || _a === void 0 ? void 0 : _a.id) {
+    if ((unit === null || unit === void 0 ? void 0 : unit.AssignTenant) === null) {
         throw new ApiErrors_1.default(http_status_1.default.BAD_REQUEST, "Owner did not assigned any tenant yet");
     }
     const [govtIssuedId, socialSecurityCard, pdfCopyOfLease, rentalApplication, petPolicyForm, backgroundCheck,] = yield Promise.all([
