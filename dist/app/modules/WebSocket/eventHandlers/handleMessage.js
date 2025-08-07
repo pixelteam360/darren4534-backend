@@ -14,7 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.handleMessage = handleMessage;
 const prisma_1 = __importDefault(require("../../../../shared/prisma"));
-const userSockets = new Map();
+const authenticate_1 = require("./authenticate");
 function handleMessage(ws, data) {
     return __awaiter(this, void 0, void 0, function* () {
         const { receiverId, roomId, message, images } = data;
@@ -69,7 +69,7 @@ function handleMessage(ws, data) {
         for (const member of room.users) {
             if (member.userId === ws.userId)
                 continue;
-            const receiverSocket = userSockets.get(member.userId);
+            const receiverSocket = authenticate_1.userSockets.get(member.userId);
             if (receiverSocket) {
                 receiverSocket.send(JSON.stringify({ event: "message", data: chat }));
             }
