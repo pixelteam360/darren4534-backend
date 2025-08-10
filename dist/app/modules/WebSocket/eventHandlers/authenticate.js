@@ -34,6 +34,15 @@ function handleAuthenticate(ws, data, wss) {
         ws.userId = user.id;
         onlineUsers.add(user.id);
         exports.userSockets.set(user.id, ws);
+        ws.send(JSON.stringify({
+            event: "authenticated",
+            message: "Authentication successful",
+            user: {
+                id: userData.id,
+                fullName: userData.fullName,
+                image: userData.image,
+            },
+        }));
         (0, utils_1.broadcastToAll)(wss, {
             event: "userStatus",
             data: { userId: user.id, isOnline: true },
